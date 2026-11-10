@@ -1,23 +1,31 @@
-# Database persistence storage volumes
+# Bytecode & Python cache
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Python Virtual Environments
+venv/
+env/
+ENV/
+flaskenv/
+servicedesk-venv/
+
+# Database persistence & volumes
 basedatos/
 data/
+instance/
 
-# Python Virtual Environments & Caches
-flaskenv/
-venv/
-__pycache__/
-*.pyc
-*.pyo
-
-# Instance secrets & configuration files
-instance/config.py
+# Configuration & environment secrets
 *.env
+.env.local
+instance/config.py
 
-# TLS Certificates & Keys
+# TLS Certificates & Private Keys
 config/nginx/*.key
 config/nginx/*.crt
 config/nginx/*.pem
 
-# OS & Editor files
+# Operating System & IDE files
 .DS_Store
 .vscode/
+.idea/
