@@ -33,3 +33,25 @@ The network firewall (`ufw`) is configured with a strict `default deny incoming`
 
 #### Verification Evidences:
 ![UFW Firewall Status](images/01-ufw-status.png)
+
+---
+
+## 3. Phase 2: Database Service & Schema Design
+
+### 3.1 Database Service & Dedicated Credentials
+- Installed and configured **PostgreSQL** relational database engine.
+- Created a dedicated database named `servicedesk`.
+- Created an application-specific non-root user `servicedesk_user` with restricted access privileges on the `servicedesk` database. The application does not use administrative database credentials.
+
+### 3.2 Schema Architecture & Entity Definitions
+The database schema consists of three relational entities designed to handle user roles, ticket reporting, and comment threads:
+
+- **`users` Table:** Stores user profile attributes (`id`, `name`, `email`, `created_at`).
+- **`incidents` Table:** Stores incident tickets (`id`, `title`, `description`, `priority`, `status`, `created_at`, `updated_at`).
+- **`comments` Table:** Stores discussion comments linked to specific incidents and users (`id`, `incident_id`, `user_id`, `comment`, `created_at`).
+
+#### SQL Schema Definition File:
+The table structures were initialized using `config/database/schema.sql`.
+
+#### Verification Evidences:
+- PostgreSQL database creation and schema assignment verified via `psql \dt` output.
