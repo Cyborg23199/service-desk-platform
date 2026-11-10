@@ -75,3 +75,18 @@ Implemented full CRUD operational endpoints:
 ### 4.3 Verification Evidence:
 - Endpoints tested using `curl` HTTP requests against local Flask application service.
 - Database operations confirmed with SQL table queries.
+
+---
+
+## 5. Phase 4: API Documentation (OpenAPI / Swagger)
+
+### 5.1 Swagger UI Integration
+- Integrated `flasgger` framework into the Flask application to provide interactive OpenAPI specification UI.
+- Configured documentation routing under the `/apidocs` endpoint.
+
+### 5.2 OpenAPI Docstrings Implementation
+- Annotated all REST endpoints (`/api/users`, `/api/incidents`, `/api/incidents/<id>/comments`) with YAML-formatted OpenAPI specifications in `src/api/routes.py`.
+- Defined explicit request body schemas, input parameters, and HTTP response codes (`200`, `201`, `400`, `404`, `409`).
+
+### 5.3 Verification Evidence
+- Verified endpoint browsing and schema validation through the interactive UI at `http://127.0.0.1:5000/apidocs`.

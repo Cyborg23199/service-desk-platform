@@ -46,7 +46,9 @@ flowchart TD
   - Built modular Flask backend with SQLAlchemy ORM.
   - Implemented CRUD REST API endpoints for /api/users, /api/incidents, and /api/incidents/<id>/comments.
   - Enforced unprivileged PostgreSQL service connection.
-- [ ] **Phase 4: API Documentation (OpenAPI / Swagger)**
+- [x] **Phase 4: API Documentation (OpenAPI / Swagger)**
+  - Integrated Flasgger library for automated Swagger UI generation.
+  - Documented OpenAPI specs for all `/api/users`, `/api/incidents`, and `/api/comments` endpoints at `/apidocs`.
 - [ ] **Phase 5: Web User Interface**
 - [ ] **Phase 6: Nginx Reverse Proxy Integration**
 - [ ] **Phase 7: HTTPS / TLS Certificate Configuration**
