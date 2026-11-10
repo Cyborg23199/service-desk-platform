@@ -9,19 +9,14 @@ The Service Desk Platform allows users to view, create, update, and manage syste
 
 ## 🏗 System Architecture (for Part 1)
 
-[ Clients (Browser / REST Clients) ]
-                │ (HTTPS :443)
-                ▼
-      [ Nginx Reverse Proxy ]
-                │
-                ▼
-       [ Web Interface (UI) ]
-                │ (REST / HTTP Requests)
-                ▼
-       [ REST API (Gunicorn) ]
-                │ (SQL Connection)
-                ▼
-      [ PostgreSQL Database ]
+```mermaid
+flowchart TD
+    Client[Clients / Web Browser / API Consumers] -->|HTTPS :443| Nginx[Nginx Reverse Proxy]
+    Nginx -->|Static Assets| UI[Web Interface UI]
+    Nginx -->|Proxy /api| API[REST API Engine / Gunicorn]
+    UI -->|REST / HTTP Requests| API
+    API -->|PostgreSQL Protocol :5432| DB[(PostgreSQL Database)]
+```
 
 ---
 
@@ -43,7 +38,10 @@ The Service Desk Platform allows users to view, create, update, and manage syste
   - Updated system dependencies and configured hostname (`servicedesk-vm`).
   - Implemented non-privileged system user (`servicedesk`).
   - Configured firewall (`ufw`) allowing strictly SSH (22), HTTP (80), and HTTPS (443).
-- [ ] **Phase 2: Database Service & Schema Implementation**
+- [x] **Phase 2: Database Service & Schema Implementation**
+  - Installed and secured PostgreSQL service.
+  - Created dedicated application database (servicedesk) and unprivileged DB user.
+  - Implemented schema for users, incidents, and comments with strict NOT NULL constraints and timestamp triggers.
 - [ ] **Phase 3: REST API Implementation**
 - [ ] **Phase 4: API Documentation (OpenAPI / Swagger)**
 - [ ] **Phase 5: Web User Interface**
