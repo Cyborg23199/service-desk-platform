@@ -1,4 +1,5 @@
 from flask import Flask
+from flasgger import Swagger
 from config import Config
 from models import db
 from api import api_bp
@@ -7,7 +8,15 @@ def create_app():
     app = Flask(__name__)
     app.config.from_object(Config)
 
+    # Configuration of Swagger UI:
+    app.config['SWAGGER'] = {
+        'title': 'Service Desk API',
+        'uiversion': 3,
+        'description': 'OpenAPI / Swagger documentation for Service Desk Platform REST API'
+    }
+
     db.init_app(app)
+    Swagger(app)
 
     app.register_blueprint(api_bp)
 
