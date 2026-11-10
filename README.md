@@ -42,7 +42,10 @@ flowchart TD
   - Installed and secured PostgreSQL service.
   - Created dedicated application database (servicedesk) and unprivileged DB user.
   - Implemented schema for users, incidents, and comments with strict NOT NULL constraints and timestamp triggers.
-- [ ] **Phase 3: REST API Implementation**
+- [x] **Phase 3: REST API Implementation**
+  - Built modular Flask backend with SQLAlchemy ORM.
+  - Implemented CRUD REST API endpoints for /api/users, /api/incidents, and /api/incidents/<id>/comments.
+  - Enforced unprivileged PostgreSQL service connection.
 - [ ] **Phase 4: API Documentation (OpenAPI / Swagger)**
 - [ ] **Phase 5: Web User Interface**
 - [ ] **Phase 6: Nginx Reverse Proxy Integration**

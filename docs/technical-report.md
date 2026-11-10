@@ -55,3 +55,23 @@ The table structures were initialized using `config/database/schema.sql`.
 
 #### Verification Evidences:
 - PostgreSQL database creation and schema assignment verified via `psql \dt` output.
+
+---
+
+## 4. Phase 3: REST API Implementation
+
+### 4.1 Backend Application Architecture
+- Developed a Python Flask application following a modular Blueprint architecture (`src/api/`).
+- Integrated **Flask-SQLAlchemy** ORM for PostgreSQL database interactions.
+- Configured connection parameters to use the unprivileged `servicedesk_user` database account.
+
+### 4.2 Endpoint Specifications & Verification
+Implemented full CRUD operational endpoints:
+- **`GET /api/users` & `POST /api/users`**: User profile query and creation.
+- **`GET /api/incidents` & `POST /api/incidents`**: Incident management endpoints.
+- **`GET /api/incidents/<id>` & `PUT /api/incidents/<id>` & `DELETE /api/incidents/<id>`**: Incident retrieval, status/priority update, and removal.
+- **`GET /api/incidents/<id>/comments` & `POST /api/incidents/<id>/comments`**: Incident comment thread handlers.
+
+### 4.3 Verification Evidence:
+- Endpoints tested using `curl` HTTP requests against local Flask application service.
+- Database operations confirmed with SQL table queries.
