@@ -90,3 +90,19 @@ Implemented full CRUD operational endpoints:
 
 ### 5.3 Verification Evidence
 - Verified endpoint browsing and schema validation through the interactive UI at `http://127.0.0.1:5000/apidocs`.
+
+---
+
+## 6. Phase 5: Web User Interface
+
+### 6.1 Frontend Architecture
+- Separated presentation layer from REST API logic by creating a dedicated `web` Blueprint (`src/web/`).
+- Configured custom `static_url_path='/web/static'` to cleanly serve CSS and JavaScript assets alongside Jinja2 HTML templates.
+
+### 6.2 Views & API Integration
+- **Dashboard (`/`):** Displays a chronological table of all incidents with status/priority badges and a form to submit new incidents.
+- **Incident Details (`/incidents/<id>`):** Displays full incident metadata, comment threads, and a comment submission form.
+- **Client-Side Logic (`main.js`):** Intercepted form submissions using the JavaScript `fetch` API to send asynchronous `POST` JSON payloads directly to `/api/incidents` and `/api/incidents/<id>/comments`.
+
+### 6.3 Verification Evidence
+- Verified responsive CSS Grid/Flexbox layouts, static asset delivery, and end-to-end incident/comment creation via browser testing.

@@ -1,0 +1,29 @@
+body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background: #f4f6f8; color: #333; margin: 0; padding: 0; }
+.container { max-width: 900px; margin: 0 auto; padding: 0 20px; }
+header { background: #1a252f; color: #fff; padding: 15px 0; }
+header a { color: #fff; text-decoration: none; }
+header nav a { margin-left: 20px; }
+footer { text-align: center; color: #777; font-size: 0.9em; padding: 20px 0; margin-top: 40px; }
+.card { background: #fff; padding: 20px; border-radius: 6px; box-shadow: 0 2px 4px rgba(0,0,0,0.05); margin-top: 20px; }
+.form-group { margin-bottom: 15px; }
+.form-group label { display: block; margin-bottom: 5px; font-weight: bold; }
+.form-group input, .form-group textarea, .form-group select { width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box; }
+.btn { background: #007bff; color: #fff; border: none; padding: 10px 15px; border-radius: 4px; cursor: pointer; }
+.btn:hover { background: #0056b3; }
+.btn-sm { background: #6c757d; color: #fff; padding: 4px 8px; text-decoration: none; border-radius: 3px; font-size: 0.85em; }
+.btn-secondary { color: #007bff; text-decoration: none; font-weight: bold; }
+.table { width: 100%; border-collapse: collapse; margin-top: 15px; }
+.table th, .table td { text-align: left; padding: 10px; border-bottom: 1px solid #eee; }
+.badge { padding: 3px 8px; border-radius: 3px; font-size: 0.8em; font-weight: bold; }
+.priority-low { background: #e2e3e5; color: #383d41; }
+.priority-medium { background: #fff3cd; color: #856404; }
+.priority-high { background: #ffe8a1; color: #856404; }
+.priority-critical { background: #f8d7da; color: #721c24; }
+.status-open { background: #cce5ff; color: #004085; }
+.status-in_progress { background: #d4edda; color: #155724; }
+.status-resolved { background: #d1ecf1; color: #0c5460; }
+.status-closed { background: #e2e3e5; color: #383d41; }
+.comment-item { background: #f8f9fa; border-left: 3px solid #007bff; padding: 10px; margin-bottom: 10px; border-radius: 0 4px 4px 0; }
+.comment-header { display: flex; justify-content: space-between; margin-bottom: 5px; color: #555; }
+.meta-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; background: #f8f9fa; padding: 12px; border-radius: 4px; margin-top: 10px; }
+.actions-bar { margin-top: 20px; }

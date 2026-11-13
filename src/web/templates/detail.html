@@ -1,0 +1,52 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="actions-bar">
+    <a href="{{ url_for('web.index') }}" class="btn-secondary">&larr; Back to Dashboard</a>
+</div>
+
+<section class="card">
+    <h2>Incident #{{ incident.id }}: {{ incident.title }}</h2>
+    <p class="description">{{ incident.description }}</p>
+
+    <div class="meta-grid">
+        <div><strong>Status:</strong> <span class="badge status-{{ incident.status|lower }}">{{ incident.status
+                }}</span></div>
+        <div><strong>Priority:</strong> <span class="badge priority-{{ incident.priority|lower }}">{{ incident.priority
+                }}</span></div>
+        <div><strong>Created:</strong> {{ incident.created_at.strftime('%Y-%m-%d %H:%M') }}</div>
+    </div>
+</section>
+
+<section class="card">
+    <h3>Comments Thread</h3>
+    <div class="comments-list">
+        {% for comment in comments %}
+        <div class="comment-item">
+            <div class="comment-header">
+                <strong>User #{{ comment.user_id }}</strong>
+                <small>{{ comment.created_at.strftime('%Y-%m-%d %H:%M') }}</small>
+            </div>
+            <p>{{ comment.comment }}</p>
+        </div>
+        {% else %}
+        <p class="no-data">No comments added to this incident yet.</p>
+        {% endfor %}
+    </div>
+
+    <h4>Add a Comment</h4>
+    <form id="add-comment-form" data-incident-id="{{ incident.id }}">
+        <div class="form-group">
+            <label for="user_id">User ID</label>
+            <input type="number" id="user_id" name="user_id" required placeholder="Enter User ID (e.g. 1)">
+        </div>
+        <div class="form-group">
+            <label for="comment">Comment</label>
+            <textarea id="comment" name="comment" rows="2" required placeholder="Type your comment..."></textarea>
+        </div>
+        <button type="submit" class="btn">Post Comment</button>
+    </form>
+</section>
+
+<script src="{{ url_for('web.static', filename='js/main.js') }}"></script>
+{% endblock %}

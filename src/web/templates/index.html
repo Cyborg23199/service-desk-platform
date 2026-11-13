@@ -1,0 +1,61 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<section class="card">
+    <h2>Create New Incident</h2>
+    <form id="create-incident-form">
+        <div class="form-group">
+            <label for="title">Title</label>
+            <input type="text" id="title" name="title" required placeholder="Brief description of the issue">
+        </div>
+        <div class="form-group">
+            <label for="description">Description</label>
+            <textarea id="description" name="description" rows="3" required
+                placeholder="Detailed explanation"></textarea>
+        </div>
+        <div class="form-group">
+            <label for="priority">Priority</label>
+            <select id="priority" name="priority">
+                <option value="LOW">LOW</option>
+                <option value="MEDIUM" selected>MEDIUM</option>
+                <option value="HIGH">HIGH</option>
+                <option value="CRITICAL">CRITICAL</option>
+            </select>
+        </div>
+        <button type="submit" class="btn">Submit Incident</button>
+    </form>
+</section>
+
+<section class="card">
+    <h2>All Incidents</h2>
+    <table class="table">
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>Title</th>
+                <th>Priority</th>
+                <th>Status</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for incident in incidents %}
+            <tr>
+                <td>#{{ incident.id }}</td>
+                <td><strong>{{ incident.title }}</strong></td>
+                <td><span class="badge priority-{{ incident.priority|lower }}">{{ incident.priority }}</span></td>
+                <td><span class="badge status-{{ incident.status|lower }}">{{ incident.status }}</span></td>
+                <td><a href="{{ url_for('web.incident_detail', incident_id=incident.id) }}" class="btn-sm">View
+                        Details</a></td>
+            </tr>
+            {% else %}
+            <tr>
+                <td colspan="5">No incidents recorded yet.</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</section>
+
+<script src="{{ url_for('web.static', filename='js/main.js') }}"></script>
+{% endblock %}

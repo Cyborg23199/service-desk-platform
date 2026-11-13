@@ -3,6 +3,7 @@ from flasgger import Swagger
 from config import Config
 from models import db
 from api import api_bp
+from web import web_bp
 
 def create_app():
     app = Flask(__name__)
@@ -19,6 +20,7 @@ def create_app():
     Swagger(app)
 
     app.register_blueprint(api_bp)
+    app.register_blueprint(web_bp)
 
     return app
 

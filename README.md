@@ -49,7 +49,10 @@ flowchart TD
 - [x] **Phase 4: API Documentation (OpenAPI / Swagger)**
   - Integrated Flasgger library for automated Swagger UI generation.
   - Documented OpenAPI specs for all `/api/users`, `/api/incidents`, and `/api/comments` endpoints at `/apidocs`.
-- [ ] **Phase 5: Web User Interface**
+- [x] **Phase 5: Web User Interface**
+  - Built a modular web frontend using Flask Blueprints (`src/web/`) and Jinja2 templates.
+  - Created dashboard (`index.html`) for incident listing and creation, plus detail views (`detail.html`) for comment threads.
+  - Connected frontend forms to the REST API via asynchronous JavaScript (`fetch` API) and styled with custom CSS.
 - [ ] **Phase 6: Nginx Reverse Proxy Integration**
 - [ ] **Phase 7: HTTPS / TLS Certificate Configuration**
 - [ ] **Phase 8: systemd Automation & Service Management**
