@@ -163,3 +163,28 @@ Implemented full CRUD operational endpoints:
 - Verified full lifecycle management using `systemctl start`, `stop`, `restart`, and `status servicedesk-api`.
 - Simulated a process crash (`kill -9 <PID>`) and confirmed via `systemctl status servicedesk-api` that `systemd` automatically spawned a new master process with an updated PID after 5 seconds.
 ![Simulating crash to show automatic recovery](images/08-phase8-automatic-recovery.png)
+
+---
+
+## 10. Phase 9: Logging & Diagnostic
+
+### 10.1 Logging Architecture Across Components
+Each layer of the distributed architecture records operational events to dedicated, persistent log streams:
+1. **Nginx Reverse Proxy:** Configured dedicated directives `access_log /var/log/nginx/servicedesk_access.log;` and `error_log /var/log/nginx/servicedesk_error.log warn;` inside the HTTPS server block to isolate application traffic from default system sites.
+2. **Application & WSGI Server (Gunicorn / Flask):** Updated `servicedesk-api.service` with `--access-logfile - --error-logfile - --log-level info`, streaming all HTTP worker transactions and Python tracebacks directly to `stdout`/`stderr`.
+3. **Systemd (`journald`):** Captures service lifecycle events (starts, stops, worker PIDs, resource usage) and Gunicorn output, queryable via `journalctl -u servicedesk-api`.
+4. **PostgreSQL Database:** Logs connection attempts, authentication failures, checkpoints, and SQL errors to `/var/log/postgresql/postgresql-18-main.log`.
+
+### 10.2 Diagnostic Questions & Log Findings
+- **What requests did the server receive?**
+  Both `servicedesk_access.log` and `journalctl` recorded incoming client requests, including `GET /api/incidents HTTP/1.1` (returning `200`, 948 bytes) and `GET /api/incidents/99999 HTTP/1.1` (returning `404`, 207 bytes) from `127.0.0.1` via `curl/8.18.0`.
+- **Did any HTTP error occur?**
+  Yes. At `18:33:38 +0100`, requesting a non-existent resource (`/api/incidents/99999`) resulted in an HTTP `404 Not Found` status code logged in `servicedesk_access.log` (while `servicedesk_error.log` remained empty, confirming the reverse proxy itself operated without upstream failures).
+- **When was the application started?**
+  According to `journalctl -u servicedesk-api`, the service was restarted and initialized at `Nov 14 18:31:22`, spawning master process PID `620725` and three worker processes (`620727`, `620728`, `620729`) listening on `127.0.0.1:8000`.
+- **When did an error occur and which component produced it?**
+  - At `17:13:57.970 CET`, the **PostgreSQL** service logged `FATAL: password authentication failed for user "servicedesk_user"` during an interactive authentication test.
+  - At `18:33:38 +0100`, the **Flask REST API** layer returned an HTTP `404` error for an invalid incident ID.
+
+### 10.3 Verification Evidence
+![Cross-Layer Logs Verification](images/09-phase9-logs-verification.png)

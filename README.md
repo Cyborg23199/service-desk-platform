@@ -62,7 +62,9 @@ flowchart TD
 - [x] **Phase 8: Systemd Service Management & Lifecycle Control**
   - Standardized the application unit as `servicedesk-api.service` to clearly distinguish the backend WSGI/API service from the Nginx reverse proxy and PostgreSQL database units.
   - Enforced strict service dependencies (`Requires=postgresql.service`, `After=network.target postgresql.service`), production environment variables (`FLASK_ENV=production`), unprivileged execution (`User=uo324701`), and automatic fault recovery (`Restart=on-failure`, `RestartSec=5`).
-- [ ] **Phase 9: Logging & Diagnostics**
+- [x] **Phase 9: Logging & Diagnostics**
+  - Configured dedicated Nginx access and error logs (`/var/log/nginx/servicedesk_access.log`, `/var/log/nginx/servicedesk_error.log`) and enabled structured Gunicorn request/error logging (`--access-logfile -`, `--error-logfile -`) routed to `systemd-journald`.
+  - Verified cross-layer log correlation across Nginx, Gunicorn/Flask, `journalctl`, and PostgreSQL (`/var/log/postgresql/`).
 - [ ] **Phase 10: System Security Hardening**
 - [ ] **Phase 11: System Verification & Testing**
 
