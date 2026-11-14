@@ -56,7 +56,9 @@ flowchart TD
 - [x] **Phase 6: Production Deployment (Gunicorn & Nginx Reverse Proxy)**
   - Configured multi-worker WSGI execution using **Gunicorn** managed by a custom `systemd` service (`servicedesk.service`).
   - Deployed **Nginx** as a reverse proxy on port `80`, forwarding requests to the internal Gunicorn socket (`127.0.0.1:8000`) and serving static files.
-- [ ] **Phase 7: HTTPS / TLS Certificate Configuration**
+- [x] **Phase 7: HTTPS / TLS Certificate Configuration**
+  - Generated a 2048-bit RSA self-signed SSL/TLS certificate using OpenSSL.
+  - Configured **Nginx** to terminate TLSv1.2/TLSv1.3 traffic on port `443` and enforce permanent HTTP-to-HTTPS redirection (`301`) from port `80`.
 - [ ] **Phase 8: systemd Automation & Service Management**
 - [ ] **Phase 9: Logging & Diagnostics**
 - [ ] **Phase 10: System Security Hardening**
