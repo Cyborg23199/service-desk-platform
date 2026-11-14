@@ -143,4 +143,4 @@ Implemented full CRUD operational endpoints:
 - Verified automatic HTTP-to-HTTPS redirection using `curl -I http://127.0.0.1:80/api/incidents`.
 ![HTTP-to-HTTPS redirection](images/07-phase7-http-to-https-redirection.png)
 - Verified encrypted API and Web UI delivery over port `443` via `curl -k -i https://127.0.0.1:443/api/incidents` and browser testing.
-![Nginx HTTPS Verification](images/phase7-https-verification.png)
+![Nginx HTTPS Verification](images/06-phase7-https-verification.png)
