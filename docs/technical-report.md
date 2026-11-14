@@ -206,3 +206,33 @@ Each layer of the distributed architecture records operational events to dedicat
 ### 11.2 Verification Evidence
 ![Security Audit - File Permissions, Firewall, Sockets, and Process User](images/10-phase10-security-network-privileges.png)
 ![Security Audit - SSH Hardening and Active Systemd Services](images/11-phase10-security-ssh-services.png)
+
+---
+
+## 12. Phase 11: System Verification & Testing
+
+To validate the reliability, integration, and security of the deployed platform, four structured test suites were executed:
+
+### 12.1 Functional Testing (REST API CRUD)
+- Verified all core incident and comment operations over HTTPS (`POST /api/incidents`, `GET /api/incidents`, `PUT /api/incidents/<id>`, `POST /api/incidents/<id>/comments`, and `DELETE /api/incidents/<id>`).
+- Confirmed expected HTTP status codes (`201 Created`, `200 OK`, `404 Not Found`) and JSON payload persistence.
+
+### 12.2 Integration Testing (`Web UI -> API -> PostgreSQL`)
+- Submitted new incidents, updated workflow states (`OPEN` -> `IN_PROGRESS`), and posted comments through the web frontend (`https://127.0.0.1/`).
+- Queried the `servicedesk` database directly via `psql` (both manually and within `scripts/run_tests.sh`) to confirm that UI and API actions propagated accurately into PostgreSQL tables without direct frontend-to-database coupling.
+
+### 12.3 Recovery & Boot Persistence Testing
+- Executed a controlled service restart (`systemctl restart servicedesk-api`) followed by a full virtual machine reboot (`sudo reboot`).
+- Verified upon system startup (`systemctl is-active postgresql nginx servicedesk-api`) that all three stack layers initialized automatically and resumed serving HTTPS requests (`HTTP/1.1 200 OK`) with zero manual intervention.
+
+### 12.4 Security Isolation Testing
+- Attempted direct external connections to internal ports `5432` (PostgreSQL) and `8000` (Gunicorn) using `curl --connect-timeout 5`.
+- Confirmed connection timeouts (`Connection timed out`), verifying that `UFW` firewall rules and loopback interface bindings (`127.0.0.1`) prevent unauthorized external access.
+
+### 12.5 Verification Evidence
+![Functional Testing - REST API CRUD Lifecycle](images/12-phase11-functional-crud.png.png)
+![Integration Testing - Web UI Incident Creation](images/13-phase11-integration-web-create.png)
+![Integration Testing - Web UI Incident Details & Comment](images/14-phase11-integration-web-comment.png)
+![Integration Testing - PostgreSQL Persistence Verification](images/15-phase11-integration-db.png)
+![Security Testing - External Port Isolation from Remote Host](images/16-phase11-security-ports.png)
+![Recovery Testing - Automatic Service Startup After VM Reboot](images/17-phase11-recovery-reboot.png)
