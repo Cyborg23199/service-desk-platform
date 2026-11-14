@@ -144,3 +144,22 @@ Implemented full CRUD operational endpoints:
 ![HTTP-to-HTTPS redirection](images/07-phase7-http-to-https-redirection.png)
 - Verified encrypted API and Web UI delivery over port `443` via `curl -k -i https://127.0.0.1:443/api/incidents` and browser testing.
 ![Nginx HTTPS Verification](images/06-phase7-https-verification.png)
+
+---
+
+## 9. Phase 8: Systemd Service Management & Lifecycle Control
+
+### 9.1 Unit Standardization & Architectural Clarity
+- Standardized the system unit file as `servicedesk-api.service` (`/etc/systemd/system/servicedesk-api.service`) to provide clear semantic separation between the backend application layer (`servicedesk-api`), the reverse proxy (`nginx`), and the persistence layer (`postgresql`).
+- Enabled automatic startup on system boot via `systemctl enable servicedesk-api`, eliminating any reliance on manual terminal sessions.
+
+### 9.2 Service Configuration & Fault Tolerance
+- **Execution Context & Working Directory:** Configured the service to run under the unprivileged system account `User=uo324701` (`Group=www-data`) inside `/home/uo324701/service-desk-platform/src`, adhering to the principle of least privilege.
+- **Environment Isolation:** Explicitly defined `PATH=/home/uo324701/servicedesk-venv/bin` and `FLASK_ENV=production` within the `[Service]` block to guarantee deterministic execution inside the isolated virtual environment.
+- **Service Dependencies:** Configured both ordering (`After=network.target postgresql.service`) and hard dependency binding (`Requires=postgresql.service`), ensuring the API starts only after the network and database are ready and halts cleanly if the database becomes unavailable.
+- **Automated Recovery:** Set `Restart=on-failure` with `RestartSec=5`, allowing `systemd` to automatically detect unexpected worker crashes and respawn the Gunicorn process within 5 seconds without interfering with intentional administrative stops (`systemctl stop servicedesk-api`).
+
+### 9.3 Verification Evidence
+- Verified full lifecycle management using `systemctl start`, `stop`, `restart`, and `status servicedesk-api`.
+- Simulated a process crash (`kill -9 <PID>`) and confirmed via `systemctl status servicedesk-api` that `systemd` automatically spawned a new master process with an updated PID after 5 seconds.
+![Simulating crash to show automatic recovery](images/08-phase8-automatic-recovery.png)
