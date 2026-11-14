@@ -67,7 +67,7 @@ flowchart TD
   - Verified cross-layer log correlation across Nginx, Gunicorn/Flask, `journalctl`, and PostgreSQL (`/var/log/postgresql/`).
 - [x] **Phase 10: Security Hardening & Access Control**
   - Enforced network perimeter protection via `UFW` (exposing only ports `22`, `80`, and `443`) while isolating Gunicorn (`127.0.0.1:8000`) and PostgreSQL (`127.0.0.1:5432`) strictly to loopback interfaces.
-  - Applied principle of least privilege across OS and database layers (`uo324701` service user, dedicated `servicedesk_user` DB role, `chmod 600` on `config.py`), disabled Nginx version disclosure (`server_tokens off`), and verified hardened SSH settings.
+  - Applied principle of least privilege across OS and database layers (`uo324701` service user, dedicated `servicedesk_user` DB role, `chmod 600` on sensitive files), externalized database credentials and `SECRET_KEY` out of source code into `/etc/servicedesk.env` (`chmod 640`, loaded via `systemd` `EnvironmentFile`), disabled Nginx version disclosure (`server_tokens off`), and verified hardened SSH settings.
 - [ ] **Phase 11: System Verification & Testing**
 
 ### Part 2: Operation & Observability

@@ -201,6 +201,7 @@ Each layer of the distributed architecture records operational events to dedicat
 5. **Restricted SSH Access:** Verified via `sshd -T` that SSH access relies on infrastructure-managed authentication controls and disables direct root password login (`PermitRootLogin prohibit-password` / `no`), preventing brute-force administrative compromises.
 6. **Minimization of Running Services & Information Disclosure:** Audited active systemd units (`systemctl list-units --type=service --state=running`) to ensure no legacy or unnecessary services (such as Apache, FTP, or Telnet) are running. Additionally, enabled `server_tokens off;` in Nginx and restricted `src/config.py` permissions (`chmod 600`) to protect database credentials.
 7. **End-to-End Transport Encryption (HTTPS):** Enforced TLSv1.2/TLSv1.3 encryption with strong cipher suites and automatic HTTP-to-HTTPS redirection (`301`), protecting API payloads and user data against eavesdropping and Man-in-the-Middle (MitM) attacks.
+8. **Secrets Management & Credential Externalization:** Removed hardcoded database connection strings and Flask `SECRET_KEY` values from `src/config.py`. Stored sensitive runtime variables in `/etc/servicedesk.env` with restricted permissions (`chown root:uo324701`, `chmod 640`) and loaded them securely into the application process using the `EnvironmentFile=/etc/servicedesk.env` directive in `servicedesk-api.service`.
 
 ### 11.2 Verification Evidence
 ![Security Audit - File Permissions, Firewall, Sockets, and Process User](images/10-phase10-security-network-privileges.png)
