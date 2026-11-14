@@ -68,7 +68,8 @@ flowchart TD
 - [x] **Phase 10: Security Hardening & Access Control**
   - Enforced network perimeter protection via `UFW` (exposing only ports `22`, `80`, and `443`) while isolating Gunicorn (`127.0.0.1:8000`) and PostgreSQL (`127.0.0.1:5432`) strictly to loopback interfaces.
   - Applied principle of least privilege across OS and database layers (`uo324701` service user, dedicated `servicedesk_user` DB role, `chmod 600` on sensitive files), externalized database credentials and `SECRET_KEY` out of source code into `/etc/servicedesk.env` (`chmod 640`, loaded via `systemd` `EnvironmentFile`), disabled Nginx version disclosure (`server_tokens off`), and verified hardened SSH settings.
-- [ ] **Phase 11: System Verification & Testing**
+- [x] **Phase 11: System Verification & Testing**
+  - Created an automated verification suite (`scripts/run_tests.sh`) alongside manual validation covering REST API CRUD and comment workflows, full-stack integration (`Web UI -> REST API -> PostgreSQL`), external port isolation (`5432`, `8000`), and automatic service recovery after a full VM reboot.
 
 ### Part 2: Operation & Observability
 - [ ] **Phase 1: Definition of Indicators**
