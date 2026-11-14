@@ -46,4 +46,32 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         });
     }
+
+    const updateStatusForm = document.getElementById('update-status-form');
+    if (updateStatusForm) {
+        updateStatusForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const incidentId = updateStatusForm.getAttribute('data-incident-id');
+            const newStatus = document.getElementById('status-select').value;
+
+            try {
+                const response = await fetch(`/api/incidents/${incidentId}`, {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ status: newStatus })
+                });
+
+                if (response.ok) {
+                    window.location.reload();
+                } else {
+                    alert('Failed to update incident status.');
+                }
+            } catch (error) {
+                console.error('Error updating status:', error);
+                alert('Network error while updating status.');
+            }
+        });
+    }
 });

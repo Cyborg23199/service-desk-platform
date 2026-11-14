@@ -16,6 +16,20 @@
                 }}</span></div>
         <div><strong>Created:</strong> {{ incident.created_at.strftime('%Y-%m-%d %H:%M') }}</div>
     </div>
+
+    <hr style="margin: 1.2rem 0; border: 0; border-top: 1px solid #e2e8f0;">
+    <form id="update-status-form" data-incident-id="{{ incident.id }}"
+        style="display: flex; gap: 0.75rem; align-items: center;">
+        <label for="status-select"><strong>Update Status:</strong></label>
+        <select id="status-select" name="status"
+            style="padding: 0.45rem 0.7rem; border-radius: 4px; border: 1px solid #cbd5e1;">
+            <option value="OPEN" {% if incident.status=='OPEN' %}selected{% endif %}>OPEN</option>
+            <option value="IN_PROGRESS" {% if incident.status=='IN_PROGRESS' %}selected{% endif %}>IN_PROGRESS</option>
+            <option value="RESOLVED" {% if incident.status=='RESOLVED' %}selected{% endif %}>RESOLVED</option>
+            <option value="CLOSED" {% if incident.status=='CLOSED' %}selected{% endif %}>CLOSED</option>
+        </select>
+        <button type="submit" class="btn">Save Status</button>
+    </form>
 </section>
 
 <section class="card">
