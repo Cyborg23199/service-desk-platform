@@ -59,7 +59,9 @@ flowchart TD
 - [x] **Phase 7: HTTPS / TLS Certificate Configuration**
   - Generated a 2048-bit RSA self-signed SSL/TLS certificate using OpenSSL.
   - Configured **Nginx** to terminate TLSv1.2/TLSv1.3 traffic on port `443` and enforce permanent HTTP-to-HTTPS redirection (`301`) from port `80`.
-- [ ] **Phase 8: systemd Automation & Service Management**
+- [x] **Phase 8: Systemd Service Management & Lifecycle Control**
+  - Standardized the application unit as `servicedesk-api.service` to clearly distinguish the backend WSGI/API service from the Nginx reverse proxy and PostgreSQL database units.
+  - Enforced strict service dependencies (`Requires=postgresql.service`, `After=network.target postgresql.service`), production environment variables (`FLASK_ENV=production`), unprivileged execution (`User=uo324701`), and automatic fault recovery (`Restart=on-failure`, `RestartSec=5`).
 - [ ] **Phase 9: Logging & Diagnostics**
 - [ ] **Phase 10: System Security Hardening**
 - [ ] **Phase 11: System Verification & Testing**
