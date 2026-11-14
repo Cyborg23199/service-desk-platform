@@ -122,3 +122,19 @@ Implemented full CRUD operational endpoints:
 ### 7.3 Verification Evidence
 - Confirmed active service status via `systemctl status servicedesk` and `nginx -t`.
 - Verified end-to-end HTTP delivery of both Web UI (`/`) and REST API (`/api/incidents`) through Nginx on port `80`.
+
+---
+
+## 8. Phase 7: HTTPS / TLS Encryption
+
+### 8.1 Self-Signed Certificate Generation
+- Generated a 2048-bit RSA private key (`/etc/ssl/private/servicedesk.key`) and X.509 certificate (`/etc/ssl/certs/servicedesk.crt`) valid for 365 days using `openssl`.
+
+### 8.2 Nginx TLS Termination & Redirection
+- Updated `config/nginx/servicedesk.conf` with a dedicated HTTPS listener on port `443 ssl`.
+- Enforced modern cryptographic standards (`TLSv1.2`, `TLSv1.3` and `HIGH:!aNULL:!MD5` ciphers).
+- Configured port `80` to issue a permanent `301 Moved Permanently` redirect (`https://$host$request_uri`) for all unencrypted HTTP requests.
+
+### 8.3 Verification Evidence
+- Verified automatic HTTP-to-HTTPS redirection using `curl -I http://127.0.0.1:80/api/incidents`.
+- Verified encrypted API and Web UI delivery over port `443` via `curl -k -i https://127.0.0.1:443/api/incidents` and browser testing.
