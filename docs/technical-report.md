@@ -105,6 +105,7 @@ Implemented full CRUD operational endpoints:
 - **Dashboard (`/`):** Displays a chronological table of all incidents with status/priority badges and a form to submit new incidents.
 - **Incident Details (`/incidents/<id>`):** Displays full incident metadata, comment threads, and a comment submission form.
 - **Client-Side Logic (`main.js`):** Intercepted form submissions using the JavaScript `fetch` API to send asynchronous `POST` JSON payloads directly to `/api/incidents` and `/api/incidents/<id>/comments`.
+- Implemented an incident status update workflow on the detail view (`detail.html`), allowing operators to transition incidents across `OPEN`, `IN_PROGRESS`, `RESOLVED`, and `CLOSED` states via asynchronous `PUT /api/incidents/<id>` requests.
 
 ### 6.3 Verification Evidence
 - Verified responsive CSS Grid/Flexbox layouts, static asset delivery, and end-to-end incident/comment creation via browser testing.
@@ -230,9 +231,9 @@ To validate the reliability, integration, and security of the deployed platform,
 - Confirmed connection timeouts (`Connection timed out`), verifying that `UFW` firewall rules and loopback interface bindings (`127.0.0.1`) prevent unauthorized external access.
 
 ### 12.5 Verification Evidence
-![Functional Testing - REST API CRUD Lifecycle](images/12-phase11-functional-crud.png.png)
+![Functional Testing - REST API CRUD Lifecycle](images/12-phase11-functional-crud.png)
 ![Integration Testing - Web UI Incident Creation](images/13-phase11-integration-web-create.png)
-![Integration Testing - Web UI Incident Details & Comment](images/14-phase11-integration-web-comment.png)
+![Integration Testing - Web UI Incident Details, Status & Comment](images/14-phase11-integration-web-status-comment.png)
 ![Integration Testing - PostgreSQL Persistence Verification](images/15-phase11-integration-db.png)
 ![Security Testing - External Port Isolation from Remote Host](images/16-phase11-security-ports.png)
 ![Recovery Testing - Automatic Service Startup After VM Reboot](images/17-phase11-recovery-reboot.png)
