@@ -53,7 +53,9 @@ flowchart TD
   - Built a modular web frontend using Flask Blueprints (`src/web/`) and Jinja2 templates.
   - Created dashboard (`index.html`) for incident listing and creation, plus detail views (`detail.html`) for comment threads.
   - Connected frontend forms to the REST API via asynchronous JavaScript (`fetch` API) and styled with custom CSS.
-- [ ] **Phase 6: Nginx Reverse Proxy Integration**
+- [x] **Phase 6: Production Deployment (Gunicorn & Nginx Reverse Proxy)**
+  - Configured multi-worker WSGI execution using **Gunicorn** managed by a custom `systemd` service (`servicedesk.service`).
+  - Deployed **Nginx** as a reverse proxy on port `80`, forwarding requests to the internal Gunicorn socket (`127.0.0.1:8000`) and serving static files.
 - [ ] **Phase 7: HTTPS / TLS Certificate Configuration**
 - [ ] **Phase 8: systemd Automation & Service Management**
 - [ ] **Phase 9: Logging & Diagnostics**

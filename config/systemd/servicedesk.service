@@ -1,0 +1,14 @@
+[Unit]
+Description=Gunicorn instance to serve Service Desk Platform
+After=network.target postgresql.service
+
+[Service]
+User=uo324701
+Group=www-data
+WorkingDirectory=/home/uo324701/service-desk-platform/src
+Environment="PATH=/home/uo324701/servicedesk-venv/bin"
+ExecStart=/home/uo324701/servicedesk-venv/bin/gunicorn --workers 3 --bind 127.0.0.1:8000 app:app
+Restart=always
+
+[Install]
+WantedBy=multi-user.target

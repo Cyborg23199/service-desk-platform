@@ -106,3 +106,19 @@ Implemented full CRUD operational endpoints:
 
 ### 6.3 Verification Evidence
 - Verified responsive CSS Grid/Flexbox layouts, static asset delivery, and end-to-end incident/comment creation via browser testing.
+
+---
+
+## 7. Phase 6: Production Deployment (Gunicorn, Systemd & Nginx)
+
+### 7.1 WSGI Server & Process Management
+- Installed **Gunicorn** inside the isolated virtual environment (`servicedesk-venv`) to handle concurrent HTTP requests across 3 worker processes.
+- Created a custom `systemd` unit file (`config/systemd/servicedesk.service`) configured to run under the unprivileged `uo324701` user, ensuring automatic startup after PostgreSQL (`After=network.target postgresql.service`) and automatic recovery (`Restart=always`).
+
+### 7.2 Nginx Reverse Proxy Configuration
+- Installed and configured **Nginx** (`config/nginx/servicedesk.conf`) listening on port `80` and proxying traffic to Gunicorn on `127.0.0.1:8000`.
+- Configured forwarding headers (`Host`, `X-Real-IP`, `X-Forwarded-For`, `X-Forwarded-Proto`) and static asset delivery.
+
+### 7.3 Verification Evidence
+- Confirmed active service status via `systemctl status servicedesk` and `nginx -t`.
+- Verified end-to-end HTTP delivery of both Web UI (`/`) and REST API (`/api/incidents`) through Nginx on port `80`.
