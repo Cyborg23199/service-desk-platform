@@ -32,7 +32,7 @@ The network firewall (`ufw`) is configured with a strict `default deny incoming`
 | **5000** | TCP | REST API (Gunicorn / Flask) | Internal (`localhost`) | Application backend engine, accessible exclusively via Nginx proxy. |
 
 #### Verification Evidences:
-![UFW Firewall Status](images/01-ufw-status.png)
+![UFW Firewall Status](images/01-phase1-ufw-status.png)
 
 ---
 
@@ -55,6 +55,7 @@ The table structures were initialized using `config/database/schema.sql`.
 
 #### Verification Evidences:
 - PostgreSQL database creation and schema assignment verified via `psql \dt` output.
+![PostgreSQL Schema Verification](images/02-phase2-postgres-tables.png)
 
 ---
 
@@ -90,6 +91,7 @@ Implemented full CRUD operational endpoints:
 
 ### 5.3 Verification Evidence
 - Verified endpoint browsing and schema validation through the interactive UI at `http://127.0.0.1:5000/apidocs`.
+![Swagger UI OpenAPI Documentation](images/03-phase4-swagger-ui.png)
 
 ---
 
@@ -106,6 +108,8 @@ Implemented full CRUD operational endpoints:
 
 ### 6.3 Verification Evidence
 - Verified responsive CSS Grid/Flexbox layouts, static asset delivery, and end-to-end incident/comment creation via browser testing.
+![Service Desk Web Dashboard](images/04-phase5-web-dashboard.png)
+![Incident Details and Comments Thread](images/05-phase5-incident-details.png)
 
 ---
 
@@ -137,4 +141,6 @@ Implemented full CRUD operational endpoints:
 
 ### 8.3 Verification Evidence
 - Verified automatic HTTP-to-HTTPS redirection using `curl -I http://127.0.0.1:80/api/incidents`.
+![HTTP-to-HTTPS redirection](images/07-phase7-http-to-https-redirection.png)
 - Verified encrypted API and Web UI delivery over port `443` via `curl -k -i https://127.0.0.1:443/api/incidents` and browser testing.
+![Nginx HTTPS Verification](images/phase7-https-verification.png)
