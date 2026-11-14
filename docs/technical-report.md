@@ -188,3 +188,20 @@ Each layer of the distributed architecture records operational events to dedicat
 
 ### 10.3 Verification Evidence
 ![Cross-Layer Logs Verification](images/09-phase9-logs-verification.png)
+
+---
+
+## 11. Phase 10: Security Hardening & Justification
+
+### 11.1 Implemented Security Controls & Architectural Justification
+1. **Host Firewall (`UFW`):** Configured default-deny incoming policy allowing external traffic exclusively on ports `22/tcp` (SSH), `80/tcp` (HTTP redirect), and `443/tcp` (HTTPS). This minimizes the network attack surface by blocking unauthorized port scans and direct access to internal services.
+2. **Unprivileged Application Execution:** The `servicedesk-api` service executes under the non-root user `uo324701` rather than `root`. In the event of an application-level vulnerability, an attacker cannot gain administrative control over the host operating system.
+3. **Dedicated Database User (Principle of Least Privilege):** The Flask backend connects to PostgreSQL using `servicedesk_user` with privileges restricted exclusively to the `servicedesk` database, preventing administrative actions (`SUPERUSER`, `CREATEDB`) or access to other databases.
+4. **Internal Network Isolation of Database & WSGI:** Both PostgreSQL (`127.0.0.1:5432`) and Gunicorn (`127.0.0.1:8000`) bind strictly to the local loopback interface (`127.0.0.1`), guaranteeing they cannot be reached directly from external networks and forcing all external traffic through Nginx TLS termination.
+5. **Restricted SSH Access:** Verified via `sshd -T` that SSH access relies on infrastructure-managed authentication controls and disables direct root password login (`PermitRootLogin prohibit-password` / `no`), preventing brute-force administrative compromises.
+6. **Minimization of Running Services & Information Disclosure:** Audited active systemd units (`systemctl list-units --type=service --state=running`) to ensure no legacy or unnecessary services (such as Apache, FTP, or Telnet) are running. Additionally, enabled `server_tokens off;` in Nginx and restricted `src/config.py` permissions (`chmod 600`) to protect database credentials.
+7. **End-to-End Transport Encryption (HTTPS):** Enforced TLSv1.2/TLSv1.3 encryption with strong cipher suites and automatic HTTP-to-HTTPS redirection (`301`), protecting API payloads and user data against eavesdropping and Man-in-the-Middle (MitM) attacks.
+
+### 11.2 Verification Evidence
+![Security Audit - File Permissions, Firewall, Sockets, and Process User](images/10-phase10-security-network-privileges.png)
+![Security Audit - SSH Hardening and Active Systemd Services](images/11-phase10-security-ssh-services.png)
