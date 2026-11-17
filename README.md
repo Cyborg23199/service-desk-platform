@@ -91,4 +91,5 @@ flowchart TD
 
 ## 📖 Technical Report & Documentation
 
-Detailed execution evidence, architectural decisions, and step-by-step logs are documented in the [Technical Report](docs/technical-report.md).
+- **Part 1 — Design & Deployment:** Detailed execution evidence, architectural decisions, and step-by-step logs are documented in the [Technical Report](docs/technical-report.md).
+- **Part 2 — Operations & Observability:** Monitoring strategy, metrics, dashboards, alerting, load testing, and disaster recovery procedures are documented in the [Operations Report](docs/operations-report.md).
