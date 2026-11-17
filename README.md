@@ -11,11 +11,10 @@ The Service Desk Platform allows users to view, create, update, and manage syste
 
 ```mermaid
 flowchart TD
-    Client[Clients / Web Browser / API Consumers] -->|HTTPS :443| Nginx[Nginx Reverse Proxy]
-    Nginx -->|Static Assets| UI[Web Interface UI]
-    Nginx -->|Proxy /api| API[REST API Engine / Gunicorn]
-    UI -->|REST / HTTP Requests| API
-    API -->|PostgreSQL Protocol :5432| DB[(PostgreSQL Database)]
+    Client["Clients / Web Browser / API Consumers"] -->|HTTPS :443| Nginx["Nginx Reverse Proxy\n(TLS Termination)"]
+    Nginx -->|HTTP 127.0.0.1:8000| Gunicorn["Gunicorn WSGI Server"]
+    Gunicorn --> Flask["Flask Application\n(Web UI + REST API)"]
+    Flask -->|PostgreSQL Protocol :5432| DB[("PostgreSQL Database")]
 ```
 
 ---
@@ -51,7 +50,7 @@ flowchart TD
   - Documented OpenAPI specs for all `/api/users`, `/api/incidents`, and `/api/comments` endpoints at `/apidocs`.
 - [x] **Phase 5: Web User Interface**
   - Built a modular web frontend using Flask Blueprints (`src/web/`) and Jinja2 templates.
-  - Created dashboard (`index.html`) for incident listing and creation, plus detail views (`detail.html`) for comment threads.
+  - Created dashboard (`index.html`) for incident listing and creation, plus detail views (`detail.html`) for status updates and comment threads.
   - Connected frontend forms to the REST API via asynchronous JavaScript (`fetch` API) and styled with custom CSS.
 - [x] **Phase 6: Production Deployment (Gunicorn & Nginx Reverse Proxy)**
   - Configured multi-worker WSGI execution using **Gunicorn** managed by a custom `systemd` service (`servicedesk.service`).

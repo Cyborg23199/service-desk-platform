@@ -9,6 +9,43 @@
   - **RAM:** `1.6 GiB`
   - **Storage:** `18 GB`
 
+### 1.1 Component Diagram
+```mermaid
+flowchart LR
+    Client["Web Browser / API Client"]
+    Nginx["Nginx Reverse Proxy\n(TLS Termination)"]
+    Gunicorn["Gunicorn WSGI Server\n(3 Workers)"]
+    Flask["Flask Application\n(Web UI + REST API)"]
+    DB[("PostgreSQL 18\n(servicedesk DB)")]
+
+    Client --> Nginx
+    Nginx --> Gunicorn
+    Gunicorn --> Flask
+    Flask --> DB
+```
+
+### 1.2 Communication & Port Flow Diagram
+```mermaid
+sequenceDiagram
+    actor User as Client / Operator
+    participant FW as UFW Firewall
+    participant Nginx as Nginx (:80 / :443)
+    participant WSGI as Gunicorn (127.0.0.1:8000)
+    participant DB as PostgreSQL (127.0.0.1:5432)
+
+    User->>FW: HTTP Request (:80)
+    FW->>Nginx: Allow :80
+    Nginx-->>User: 301 Moved Permanently (HTTPS)
+
+    User->>FW: HTTPS Request (:443, TLSv1.2/1.3)
+    FW->>Nginx: Allow :443
+    Nginx->>WSGI: Proxy Pass HTTP (Loopback)
+    WSGI->>DB: TCP/IP SQL Query (scram-sha-256)
+    DB-->>WSGI: Result Set
+    WSGI-->>Nginx: HTTP 200 / 201 JSON or HTML
+    Nginx-->>User: Encrypted HTTPS Response
+```
+
 ---
 
 ## 2. Phase 1: Machine Preparation & Hardening
@@ -29,7 +66,7 @@ The network firewall (`ufw`) is configured with a strict `default deny incoming`
 | **80** | TCP | HTTP | Public | Public entry point for static assets and HTTP to HTTPS redirection. |
 | **443** | TCP | HTTPS | Public | Secure entry point for Nginx reverse proxy serving Web UI and API endpoints. |
 | **5432** | TCP | PostgreSQL | Internal (`localhost`) | Relational database engine, isolated from public access. |
-| **5000** | TCP | REST API (Gunicorn / Flask) | Internal (`localhost`) | Application backend engine, accessible exclusively via Nginx proxy. |
+| **8000** | TCP | REST API (Gunicorn / Flask) | Internal (`localhost`) | Application backend engine, accessible exclusively via Nginx proxy. |
 
 #### Verification Evidences:
 ![UFW Firewall Status](images/01-phase1-ufw-status.png)
@@ -237,3 +274,17 @@ To validate the reliability, integration, and security of the deployed platform,
 ![Integration Testing - PostgreSQL Persistence Verification](images/15-phase11-integration-db.png)
 ![Security Testing - External Port Isolation from Remote Host](images/16-phase11-security-ports.png)
 ![Recovery Testing - Automatic Service Startup After VM Reboot](images/17-phase11-recovery-reboot.png)
+
+## 13. Problems Encountered & Solutions Adopted
+
+1. **Missing Status Transition Workflow in Web UI:**
+   - *Problem:* While the REST API supported status updates (`PUT /api/incidents/<id>`), the initial web detail view (`detail.html`) only displayed the current status without allowing operators to modify it directly from the browser.
+   - *Solution:* Added an interactive status selection form (`OPEN`, `IN_PROGRESS`, `RESOLVED`, `CLOSED`) to `detail.html` backed by an asynchronous `fetch` handler in `src/web/static/js/main.js` that invokes the REST API endpoint while maintaining strict decoupling from PostgreSQL.
+
+2. **Hardcoded Credentials in Application Configuration:**
+   - *Problem:* Storing database connection strings and Flask `SECRET_KEY` values inside `src/config.py` posed a security risk of exposing secrets in Git commit history.
+   - *Solution:* Externalized all sensitive environment variables into `/etc/servicedesk.env` (`chown root:uo324701`, `chmod 640`) and configured `servicedesk-api.service` to load them at runtime via `EnvironmentFile=/etc/servicedesk.env`, adding `config/servicedesk.env.example` as a safe repository template.
+
+3. **Nginx Version Information Disclosure:**
+   - *Problem:* Default Nginx HTTP responses exposed the exact server version (`nginx/1.28.3 (Ubuntu)`) in the `Server` response header.
+   - *Solution:* Enabled `server_tokens off;` in `/etc/nginx/sites-available/servicedesk` to suppress server version details during security hardening.
