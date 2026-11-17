@@ -70,3 +70,26 @@ Verified via active application probing (`/health` endpoint) and `systemd` servi
 | :--- | :--- | :--- |
 | **Database Availability** | Active `SELECT 1` connectivity check executed by `/health` | Confirms not only that the `postgresql` daemon is active, but that `servicedesk_user` can authenticate and execute SQL queries. |
 | **DB Query Latency** | Round-trip execution time (in ms) of the `SELECT 1` probe | Complementary metric that exposes database connection latency increases. |
+
+---
+
+## 4. Phase 2: System Monitoring Deployment (Node Exporter & Prometheus)
+
+To collect host-level infrastructure metrics without exposing administrative ports to external networks, **Node Exporter (`v1.8.2`)** and **Prometheus (`v2.55.1`)** were deployed as native `systemd` services bound strictly to the loopback interface (`127.0.0.1`).
+
+### 4.1 Service Isolation & Resource Hardening
+- **Least-Privilege Execution:** Dedicated unprivileged system accounts (`node_exporter` and `prometheus`) with `/usr/sbin/nologin` shells own the binaries, configuration directories (`/etc/prometheus`), and time-series storage (`/var/lib/prometheus`).
+- **Network Isolation:** Both services listen exclusively on `127.0.0.1` (`:9100` and `:9090`), keeping them unreachable from external interfaces while remaining accessible to local scrape targets and SSH tunnels.
+- **Storage Retention Caps:** Prometheus is configured with `--storage.tsdb.retention.time=15d` and `--storage.tsdb.retention.size=1GB` to prevent time-series data from exhausting the VM's `18 GB` root filesystem.
+- **Reproducible Configuration:** Service unit files (`config/systemd/node_exporter.service`, `config/systemd/prometheus.service`) and scrape definitions (`config/prometheus/prometheus.yml`) are version-controlled in the repository.
+
+### 4.2 Scrape Configuration (`config/prometheus/prometheus.yml`)
+Prometheus polls metrics every `15s` from two initial targets:
+- `prometheus` (`127.0.0.1:9090`): Self-monitoring of the Prometheus server health and TSDB ingestion.
+- `node_exporter` (`127.0.0.1:9100`): Host CPU, memory, disk, load average, and network telemetry.
+
+### 4.3 Verification Evidence
+Service activation and target discovery were validated via `systemctl` and the Prometheus Targets HTTP API (`/api/v1/targets`):
+- `systemctl is-active node_exporter prometheus` returned `active` for both units.
+- `curl -s http://127.0.0.1:9100/metrics` confirmed live kernel metric exposition.
+- Querying `http://127.0.0.1:9090/api/v1/targets` confirmed `"health": "up"` for both `node_exporter` and `prometheus` scrape jobs.
