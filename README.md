@@ -71,8 +71,10 @@ flowchart TD
   - Created an automated verification suite (`scripts/run_tests.sh`) alongside manual validation covering REST API CRUD and comment workflows, full-stack integration (`Web UI -> REST API -> PostgreSQL`), external port isolation (`5432`, `8000`), and automatic service recovery after a full VM reboot.
 
 ### Part 2: Operation & Observability
-- [ ] **Phase 1: Definition of Indicators**
-- [ ] **Phase 2: System Monitoring (Node Exporter)**
+- [x] **Phase 1: Definition of Indicators**
+  - Defined and justified Service Level Indicators (SLIs) across infrastructure (CPU, RAM, disk, load average, network), application service (throughput, HTTP error rate, p50/p95/p99 latency, availability), and database layers (`SELECT 1` availability and latency).
+- [x] **Phase 2: System Monitoring (Node Exporter & Prometheus)**
+  - Deployed `node_exporter` (`127.0.0.1:9100`) and `prometheus` (`127.0.0.1:9090`) as isolated `systemd` services running under dedicated unprivileged system users (`node_exporter`, `prometheus`) with 15-day / 1 GB TSDB retention limits.
 - [ ] **Phase 3: Application Metrics (/metrics)**
 - [ ] **Phase 4: Health Check (/health)**
 - [ ] **Phase 5: Grafana Dashboard Setup**
