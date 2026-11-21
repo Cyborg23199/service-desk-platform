@@ -4,6 +4,7 @@ from config import Config
 from models import db
 from api import api_bp
 from web import web_bp
+from metrics import init_metrics
 
 def create_app():
     app = Flask(__name__)
@@ -19,6 +20,7 @@ def create_app():
     db.init_app(app)
     Swagger(app)
 
+    init_metrics(app)
     app.register_blueprint(api_bp)
     app.register_blueprint(web_bp)
 

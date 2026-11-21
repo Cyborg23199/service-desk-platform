@@ -93,3 +93,27 @@ Service activation and target discovery were validated via `systemctl` and the P
 - `systemctl is-active node_exporter prometheus` returned `active` for both units.
 - `curl -s http://127.0.0.1:9100/metrics` confirmed live kernel metric exposition.
 - Querying `http://127.0.0.1:9090/api/v1/targets` confirmed `"health": "up"` for both `node_exporter` and `prometheus` scrape jobs.
+
+---
+
+## 5. Phase 3: Application Service Instrumentation (`/metrics`)
+
+To monitor application-level traffic, error rates, and latency directly from the backend, the Flask application was instrumented using the official **`prometheus-client` (`v0.21.1`)** library and exposed via a dedicated `/metrics` endpoint.
+
+### 5.1 Multi-Worker Metric Aggregation (`Gunicorn`)
+Because `servicedesk-api.service` runs **3 Gunicorn worker processes** (`--workers 3`), each worker maintains an independent memory space. To prevent fragmented or inconsistent metric scrapes across workers:
+- `PROMETHEUS_MULTIPROC_DIR=/dev/shm/servicedesk_prom` is configured in `config/systemd/servicedesk-api.service` so all workers write shared memory-mapped metric files into `tmpfs` (`/dev/shm`).
+- `ExecStartPre` cleans and recreates `/dev/shm/servicedesk_prom` on every service start or restart to prevent stale counter persistence across process lifecycles.
+- The `/metrics` route uses `multiprocess.MultiProcessCollector` to aggregate counters and histogram buckets across all active workers into a single unified exposition response.
+
+### 5.2 Exported Application Metrics (`src/metrics.py`)
+Request hooks (`before_request` and `after_request`) capture telemetry for every incoming HTTP request while excluding `/metrics` scrapes themselves to avoid skewing traffic counts:
+- **`servicedesk_http_requests_total` (Counter):** Counts total processed HTTP requests labeled by `method`, `endpoint` (normalized Flask URL rule, e.g., `/api/incidents`), and `status` (`200`, `4xx`, `5xx`), enabling throughput and error-rate calculations.
+- **`servicedesk_http_request_duration_seconds` (Histogram):** Records request execution latency across 10 buckets (`5 ms` to `5.0 s`) labeled by `method` and `endpoint`, enabling `p50`, `p95`, and `p99` quantile queries via `histogram_quantile()`.
+
+### 5.3 Verification Evidence
+- Updated `config/prometheus/prometheus.yml` with the `servicedesk_api` scrape job targeting `127.0.0.1:8000/metrics`.
+- Executed test requests against `https://127.0.0.1/` and `https://127.0.0.1/api/incidents` and confirmed accurate counter and histogram bucket increments at `http://127.0.0.1:8000/metrics`.
+- Verified via `http://127.0.0.1:9090/api/v1/targets` that `prometheus`, `node_exporter`, and `servicedesk_api` all report `"health": "up"`.
+
+![Phase 3 Metrics and Prometheus Targets Verification](assets/part2/01-phase3-metrics-targets-verification.png)
