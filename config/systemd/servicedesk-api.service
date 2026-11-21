@@ -1,7 +1,7 @@
 [Unit]
 Description=Gunicorn service for Service Desk Platform API & Web UI
 After=network.target postgresql.service
-Requires=postgresql.service
+Wants=postgresql.service
 
 [Service]
 User=uo324701

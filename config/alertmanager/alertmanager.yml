@@ -6,31 +6,52 @@ route:
   group_wait: 15s
   group_interval: 2m
   repeat_interval: 1h
-  receiver: "servicedesk-default-receiver"
+  receiver: "slack-servicedesk-default"
   routes:
     - matchers:
         - severity="critical"
-      receiver: "servicedesk-critical-receiver"
+      receiver: "slack-servicedesk-critical"
       group_wait: 10s
       repeat_interval: 15m
     - matchers:
         - severity="warning"
-      receiver: "servicedesk-warning-receiver"
+      receiver: "slack-servicedesk-warning"
       group_wait: 30s
       repeat_interval: 2h
 
 receivers:
-  - name: "servicedesk-default-receiver"
-    webhook_configs:
-      - url: "http://127.0.0.1:9093/-/healthy"
+  - name: "slack-servicedesk-default"
+    slack_configs:
+      - api_url: "${SLACK_WEBHOOK_URL}"
+        channel: "#servicedesk-alerts"
         send_resolved: true
+        title: '[{{ .Status | toUpper }}] {{ .CommonLabels.alertname }}'
+        text: >-
+          *Severity:* {{ .CommonLabels.severity | toUpper }}
+          *Component:* {{ .CommonLabels.component }}
+          *Summary:* {{ .CommonAnnotations.summary }}
+          *Details:* {{ .CommonAnnotations.description }}
 
-  - name: "servicedesk-critical-receiver"
-    webhook_configs:
-      - url: "http://127.0.0.1:9093/-/healthy"
+  - name: "slack-servicedesk-critical"
+    slack_configs:
+      - api_url: "${SLACK_WEBHOOK_URL}"
+        channel: "#servicedesk-alerts"
         send_resolved: true
+        color: '{{ if eq .Status "firing" }}danger{{ else }}good{{ end }}'
+        title: ':rotating_light: [{{ .Status | toUpper }} - CRITICAL] {{ .CommonLabels.alertname }}'
+        text: >-
+          *Component:* {{ .CommonLabels.component }}
+          *Summary:* {{ .CommonAnnotations.summary }}
+          *Details:* {{ .CommonAnnotations.description }}
 
-  - name: "servicedesk-warning-receiver"
-    webhook_configs:
-      - url: "http://127.0.0.1:9093/-/healthy"
+  - name: "slack-servicedesk-warning"
+    slack_configs:
+      - api_url: "${SLACK_WEBHOOK_URL}"
+        channel: "#servicedesk-alerts"
         send_resolved: true
+        color: '{{ if eq .Status "firing" }}warning{{ else }}good{{ end }}'
+        title: ':warning: [{{ .Status | toUpper }} - WARNING] {{ .CommonLabels.alertname }}'
+        text: >-
+          *Component:* {{ .CommonLabels.component }}
+          *Summary:* {{ .CommonAnnotations.summary }}
+          *Details:* {{ .CommonAnnotations.description }}
