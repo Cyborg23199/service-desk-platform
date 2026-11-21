@@ -171,3 +171,28 @@ The dashboard is organized into three operational tiers matching the SLIs define
 - Generated test HTTP `200` and `404` traffic against `https://127.0.0.1` and confirmed live metric updates across all dashboard panels.
 
 ![Phase 5 Grafana Operations Overview Dashboard](images/part2/03-phase5-grafana-dashboard.png)
+
+---
+
+## 8. Phase 6: Alerting Thresholds & Operational Justification
+
+To prevent both undetected service degradation and operator alert fatigue, alerting thresholds are calibrated specifically to the hardware profile of the host VM (**2 vCPU**, **1.6 GiB RAM**, **18 GB root filesystem `/`**, **3 Gunicorn workers**, and local **PostgreSQL**) and aligned directly with the operational indicators defined in Phase 1 (Section 3).
+
+### 8.1 Alerting Threshold Matrix
+
+| Alert Category | Metric / PromQL Expression | Warning Threshold (`for`) | Critical Threshold (`for`) | Technical Justification & Operator Impact |
+| :--- | :--- | :--- | :--- | :--- |
+| **API Service Availability** | `up{job="servicedesk_api"} == 0` | — *(Immediate outage)* | `== 0` for **`1m`** | Missing 4 consecutive `15s` scrapes confirms `servicedesk-api` (Gunicorn) has crashed or hung, causing immediate user-facing downtime (`502 Bad Gateway` via Nginx). |
+| **Database Availability** | `max(servicedesk_db_up) == 0` | — *(Immediate outage)* | `== 0` for **`1m`** | Active `SELECT 1` probe failure means PostgreSQL is down or refusing connections (`HTTP 503` on `/health`), blocking all incident read/write operations. |
+| **HTTP Error Rate (`5xx`)** | `sum(rate(servicedesk_http_requests_total{status=~"5.."}[5m])) / sum(rate(servicedesk_http_requests_total[5m])) * 100` | **`> 1%`** for **`5m`** | **`> 5%`** for **`2m`** | `1%` sustained server errors indicates sporadic unhandled exceptions or DB pool timeouts (`Warning`); `> 5%` indicates systemic backend failure degrading the HTTP Error Rate indicator from Section 3.2 (Critical). |
+| **HTTP Client Errors (`4xx`)** | `sum(rate(servicedesk_http_requests_total{status=~"4.."}[5m]))` | **`> 0.5 req/s`** for **`5m`** | **`> 2.0 req/s`** for **`5m`** | Sustained `4xx` spikes signal broken client integrations, malformed payloads, or automated vulnerability/directory scanning against the public Nginx endpoint. |
+| **API Latency (`p95`)** | `histogram_quantile(0.95, sum by (le) (rate(servicedesk_http_request_duration_seconds_bucket[5m])))` | **`> 0.5 s`** (`500 ms`) for **`5m`** | **`> 1.5 s`** (`1500 ms`) for **`3m`** | Normal warm API responses complete in `< 50 ms`. Crossing `500 ms` indicates worker saturation or slow SQL queries; exceeding `1.5 s` saturates the 3 Gunicorn workers under concurrent load. |
+| **Host CPU Utilization** | `100 - (avg(rate(node_cpu_seconds_total{mode="idle"}[2m])) * 100)` | **`> 75%`** for **`5m`** | **`> 90%`** for **`3m`** | On a **2 vCPU** VM, `75%` (`1.5 cores`) leaves minimal headroom for traffic bursts; `> 90%` causes CPU run-queue contention across Gunicorn, PostgreSQL, Prometheus, and Grafana. |
+| **Host Memory (RAM) Usage** | `(1 - (node_memory_MemAvailable_bytes / node_memory_MemTotal_bytes)) * 100` | **`> 80%`** for **`5m`** | **`> 92%`** for **`2m`** | With **1.6 GiB total RAM** (baseline ~68% with full observability stack), `80%` (`~320 MiB` free) warns of memory pressure; `> 92%` (`< 130 MiB` free) risks Linux OOM-killer terminating PostgreSQL or Gunicorn. |
+| **Root Disk (`/`) Usage** | `(1 - (node_filesystem_avail_bytes{mountpoint="/",fstype!="rootfs"} / node_filesystem_size_bytes{mountpoint="/",fstype!="rootfs"})) * 100` | **`> 80%`** for **`10m`** | **`> 90%`** for **`5m`** | On the 18 GB root partition (baseline ~62%), crossing 80% (~3.6 GB free) warns of WAL log, Prometheus TSDB, or journald growth; > 90% (< 1.8 GB free) risks PostgreSQL halting writes (PANIC: could not write to file). |
+
+### 8.2 Alert Hygiene & Anti-Flapping Design Principles
+- **Sustained Duration Windows (`for`):** Every metric-based rule requires the condition to hold continuously for `1m` to `10m` before firing. This prevents transient spikes (such as initial SQLAlchemy connection pool warm-up or apt package updates) from generating false alarms.
+- **Severity Routing Policy:**
+  - **`Warning`:** Non-urgent degradation where the service remains operational; logged and reviewed during business hours to perform preventive tuning (e.g., disk cleanup, query optimization).
+  - **`Critical`:** Active outage or imminent resource exhaustion (`OOM` / disk full / `5xx` surge) requiring immediate on-call intervention via runbook procedures.

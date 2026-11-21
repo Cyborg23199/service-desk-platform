@@ -81,7 +81,8 @@ flowchart TD
   - Implemented `GET /health` (`src/health.py`) executing an active `SELECT 1` probe against PostgreSQL, returning `200 OK` with query latency in milliseconds (`503 Service Unavailable` on DB failure) and exporting `servicedesk_db_up` and `servicedesk_db_health_check_duration_seconds` to `/metrics`.
 - [x] **Phase 5: Grafana Dashboard Setup**
   - Deployed `grafana-server` restricted to `127.0.0.1:3000` (accessed via SSH tunnel), provisioned the Prometheus datasource and the 9-panel `Service Desk Platform - Operations Overview` dashboard (`config/grafana/`) covering system, application, and PostgreSQL health metrics.
-- [ ] **Phase 6: Threshold Definition**
+- [x] **Phase 6: Alert Threshold Definition**
+  - Defined and justified `Warning` and `Critical` alerting thresholds in `docs/operations-report.md` calibrated to the VM's 2 vCPU / 1.6 GiB RAM profile, covering service availability, PostgreSQL probe health, `5xx`/`4xx` error rates, `p95` latency, CPU, RAM, and disk saturation.
 - [ ] **Phase 7: Alerting System (Prometheus Rules)**
 - [ ] **Phase 8: Notification Delivery (Alertmanager)**
 - [ ] **Phase 9: Load Generation & Testing**
