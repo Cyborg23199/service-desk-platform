@@ -79,7 +79,8 @@ flowchart TD
   - Instrumented the Flask/Gunicorn backend (`src/metrics.py`) with `prometheus-client` (`v0.21.1`) using `PROMETHEUS_MULTIPROC_DIR` (`/dev/shm/servicedesk_prom`) to aggregate `servicedesk_http_requests_total` and `servicedesk_http_request_duration_seconds` across all 3 Gunicorn workers, and added `127.0.0.1:8000/metrics` as an active Prometheus scrape target.
 - [x] **Phase 4: Health Check (/health)**
   - Implemented `GET /health` (`src/health.py`) executing an active `SELECT 1` probe against PostgreSQL, returning `200 OK` with query latency in milliseconds (`503 Service Unavailable` on DB failure) and exporting `servicedesk_db_up` and `servicedesk_db_health_check_duration_seconds` to `/metrics`.
-- [ ] **Phase 5: Grafana Dashboard Setup**
+- [x] **Phase 5: Grafana Dashboard Setup**
+  - Deployed `grafana-server` restricted to `127.0.0.1:3000` (accessed via SSH tunnel), provisioned the Prometheus datasource and the 9-panel `Service Desk Platform - Operations Overview` dashboard (`config/grafana/`) covering system, application, and PostgreSQL health metrics.
 - [ ] **Phase 6: Threshold Definition**
 - [ ] **Phase 7: Alerting System (Prometheus Rules)**
 - [ ] **Phase 8: Notification Delivery (Alertmanager)**
