@@ -12,6 +12,7 @@ jsonschema-specifications==2025.9.1
 MarkupSafe==3.0.4
 mistune==3.4.0
 packaging==26.3
+prometheus_client==0.21.1
 psycopg==3.3.8
 psycopg-binary==3.3.8
 psycopg2-binary==2.9.13

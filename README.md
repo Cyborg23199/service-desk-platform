@@ -75,7 +75,8 @@ flowchart TD
   - Defined and justified Service Level Indicators (SLIs) across infrastructure (CPU, RAM, disk, load average, network), application service (throughput, HTTP error rate, p50/p95/p99 latency, availability), and database layers (`SELECT 1` availability and latency).
 - [x] **Phase 2: System Monitoring (Node Exporter & Prometheus)**
   - Deployed `node_exporter` (`127.0.0.1:9100`) and `prometheus` (`127.0.0.1:9090`) as isolated `systemd` services running under dedicated unprivileged system users (`node_exporter`, `prometheus`) with 15-day / 1 GB TSDB retention limits.
-- [ ] **Phase 3: Application Metrics (/metrics)**
+- [x] **Phase 3: Application Metrics (/metrics)**
+  - Instrumented the Flask/Gunicorn backend (`src/metrics.py`) with `prometheus-client` (`v0.21.1`) using `PROMETHEUS_MULTIPROC_DIR` (`/dev/shm/servicedesk_prom`) to aggregate `servicedesk_http_requests_total` and `servicedesk_http_request_duration_seconds` across all 3 Gunicorn workers, and added `127.0.0.1:8000/metrics` as an active Prometheus scrape target.
 - [ ] **Phase 4: Health Check (/health)**
 - [ ] **Phase 5: Grafana Dashboard Setup**
 - [ ] **Phase 6: Threshold Definition**

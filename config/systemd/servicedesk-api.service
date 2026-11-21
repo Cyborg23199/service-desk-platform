@@ -9,7 +9,10 @@ Group=www-data
 WorkingDirectory=/home/uo324701/service-desk-platform/src
 Environment="PATH=/home/uo324701/servicedesk-venv/bin"
 Environment="FLASK_ENV=production"
+Environment="PROMETHEUS_MULTIPROC_DIR=/dev/shm/servicedesk_prom"
 EnvironmentFile=/etc/servicedesk.env
+ExecStartPre=/bin/rm -rf /dev/shm/servicedesk_prom
+ExecStartPre=/bin/mkdir -p /dev/shm/servicedesk_prom
 ExecStart=/home/uo324701/servicedesk-venv/bin/gunicorn --workers 3 --bind 127.0.0.1:8000 --access-logfile - --error-logfile - --log-level info app:app
 Restart=on-failure
 RestartSec=5
