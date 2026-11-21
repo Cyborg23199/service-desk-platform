@@ -77,7 +77,8 @@ flowchart TD
   - Deployed `node_exporter` (`127.0.0.1:9100`) and `prometheus` (`127.0.0.1:9090`) as isolated `systemd` services running under dedicated unprivileged system users (`node_exporter`, `prometheus`) with 15-day / 1 GB TSDB retention limits.
 - [x] **Phase 3: Application Metrics (/metrics)**
   - Instrumented the Flask/Gunicorn backend (`src/metrics.py`) with `prometheus-client` (`v0.21.1`) using `PROMETHEUS_MULTIPROC_DIR` (`/dev/shm/servicedesk_prom`) to aggregate `servicedesk_http_requests_total` and `servicedesk_http_request_duration_seconds` across all 3 Gunicorn workers, and added `127.0.0.1:8000/metrics` as an active Prometheus scrape target.
-- [ ] **Phase 4: Health Check (/health)**
+- [x] **Phase 4: Health Check (/health)**
+  - Implemented `GET /health` (`src/health.py`) executing an active `SELECT 1` probe against PostgreSQL, returning `200 OK` with query latency in milliseconds (`503 Service Unavailable` on DB failure) and exporting `servicedesk_db_up` and `servicedesk_db_health_check_duration_seconds` to `/metrics`.
 - [ ] **Phase 5: Grafana Dashboard Setup**
 - [ ] **Phase 6: Threshold Definition**
 - [ ] **Phase 7: Alerting System (Prometheus Rules)**
