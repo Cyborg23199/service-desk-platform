@@ -116,7 +116,7 @@ Request hooks (`before_request` and `after_request`) capture telemetry for every
 - Executed test requests against `https://127.0.0.1/` and `https://127.0.0.1/api/incidents` and confirmed accurate counter and histogram bucket increments at `http://127.0.0.1:8000/metrics`.
 - Verified via `http://127.0.0.1:9090/api/v1/targets` that `prometheus`, `node_exporter`, and `servicedesk_api` all report `"health": "up"`.
 
-![Phase 3 Metrics and Prometheus Targets Verification](assets/part2/01-phase3-metrics-targets-verification.png)
+![Phase 3 Metrics and Prometheus Targets Verification](images/part2/01-phase3-metrics-targets-verification.png)
 
 ---
 
@@ -136,3 +136,16 @@ To verify end-to-end service and database readiness beyond process liveness, an 
 - Confirmed that `servicedesk_db_up` and `servicedesk_db_health_check_duration_seconds` are exported on `http://127.0.0.1:8000/metrics`.
 
 ![Phase 4 Health Check Verification](images/part2/02-phase4-health-check-verification.png)
+
+### 6.3 Observability Pillars: Metrics vs. Health Checks vs. Logs vs. Alerts
+
+To ensure complete operational visibility across the Service Desk Platform, four distinct telemetry and response mechanisms are combined, each serving a specific operational purpose:
+
+| Mechanism | Nature & Data Format | Primary Question Answered | Concrete Implementation in Service Desk Platform |
+| :--- | :--- | :--- | :--- |
+| **Metric** | Aggregated numerical time-series values (`name{labels} value timestamp`) scraped at fixed intervals (`15s`). Ideal for trends, rates, and percentiles. | *"How much and how fast?"* (throughput, latency distributions, resource saturation over time). | `servicedesk_http_requests_total`, `servicedesk_http_request_duration_seconds`, and `node_cpu_seconds_total` scraped by Prometheus. |
+| **Health Check** | Active on-demand probe verifying current service and dependency readiness, returning a binary state (`HTTP 200` vs. `HTTP 503`). | *"Is the service and its database dependency operational right now?"* | `GET /health` executing an active `SELECT 1` query against PostgreSQL and reporting `"healthy"` (`200`) or `"unhealthy"` (`503`). |
+| **Log** | Immutable, discrete text or structured records of individual events with detailed execution context (timestamp, client IP, route, stack trace). | *"What exactly happened during a specific request or failure?"* | Nginx access/error logs (`/var/log/nginx/servicedesk_*.log`), Gunicorn/Flask logs in `systemd-journald`, and PostgreSQL logs. |
+| **Alert** | Automated notification rule evaluated continuously against metrics or health check states, firing only when a threshold is breached for a sustained duration. | *"Is there an actionable anomaly requiring immediate operator intervention?"* | Prometheus alerting rules (e.g., `max(servicedesk_db_up) == 0` for `1m`) routed through Alertmanager to notify the on-call operator. |
+
+**End-to-End Correlation Workflow:** During an outage (e.g., PostgreSQL stopping), the `/health` probe immediately detects the connection failure and sets `servicedesk_db_up` to `0`; Prometheus scrapes this metric change and triggers a critical alert via Alertmanager; finally, the operator inspects `journalctl -u postgresql` and `journalctl -u servicedesk-api` logs to identify the exact root cause and restore service.
