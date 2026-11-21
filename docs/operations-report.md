@@ -149,3 +149,25 @@ To ensure complete operational visibility across the Service Desk Platform, four
 | **Alert** | Automated notification rule evaluated continuously against metrics or health check states, firing only when a threshold is breached for a sustained duration. | *"Is there an actionable anomaly requiring immediate operator intervention?"* | Prometheus alerting rules (e.g., `max(servicedesk_db_up) == 0` for `1m`) routed through Alertmanager to notify the on-call operator. |
 
 **End-to-End Correlation Workflow:** During an outage (e.g., PostgreSQL stopping), the `/health` probe immediately detects the connection failure and sets `servicedesk_db_up` to `0`; Prometheus scrapes this metric change and triggers a critical alert via Alertmanager; finally, the operator inspects `journalctl -u postgresql` and `journalctl -u servicedesk-api` logs to identify the exact root cause and restore service.
+
+---
+
+## 7. Phase 5: Grafana Visualization & Operations Dashboard
+
+To provide real-time operational visibility across infrastructure, application performance, and database availability, **Grafana OSS** was deployed and provisioned as code.
+
+### 7.1 Deployment & Security Hardening
+- **Loopback Isolation (`config/grafana/grafana.ini`):** Bound `grafana-server` exclusively to `127.0.0.1:3000` (`http_addr = 127.0.0.1`), disabled anonymous self-registration (`allow_sign_up = false`), and disabled external telemetry reporting. Administrative access is performed exclusively over encrypted SSH port forwarding (`ssh -L 3000:127.0.0.1:3000`).
+- **Provisioning as Code:** Configured declarative datasource provisioning (`config/grafana/provisioning/datasources/prometheus.yml` pointing to `http://127.0.0.1:9090`) and dashboard provisioning (`config/grafana/provisioning/dashboards/servicedesk.yml`), storing the complete dashboard definition in `config/grafana/dashboards/servicedesk-overview.json`.
+
+### 7.2 Dashboard Architecture (`Service Desk Platform - Operations Overview`)
+The dashboard is organized into three operational tiers matching the SLIs defined in Phase 1:
+- **Overall Service & Database State:** Live `UP`/`DOWN` status panels for all Prometheus scrape targets (`servicedesk_api`, `prometheus`, `node_exporter`), active PostgreSQL `SELECT 1` probe health (`max(servicedesk_db_up)`), and 15-minute API availability percentage.
+- **Application Telemetry:** Request throughput (`req/s` per endpoint), isolated HTTP `4xx`/`5xx` error rates, and latency quantiles (`p50`, `p95`, `p99`) computed via `histogram_quantile()`.
+- **System Telemetry:** Host CPU utilization (`%`), RAM and root filesystem (`/`) utilization (`%`), and non-loopback network throughput (`RX`/`TX Bytes/s`).
+
+### 7.3 Verification Evidence
+- Verified `systemctl is-active grafana-server` returned `active` and accessed the provisioned dashboard via SSH tunnel at `http://127.0.0.1:3000`.
+- Generated test HTTP `200` and `404` traffic against `https://127.0.0.1` and confirmed live metric updates across all dashboard panels.
+
+![Phase 5 Grafana Operations Overview Dashboard](images/part2/03-phase5-grafana-dashboard.png)
