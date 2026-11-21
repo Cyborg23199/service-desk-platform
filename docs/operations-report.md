@@ -196,3 +196,20 @@ To prevent both undetected service degradation and operator alert fatigue, alert
 - **Severity Routing Policy:**
   - **`Warning`:** Non-urgent degradation where the service remains operational; logged and reviewed during business hours to perform preventive tuning (e.g., disk cleanup, query optimization).
   - **`Critical`:** Active outage or imminent resource exhaustion (`OOM` / disk full / `5xx` surge) requiring immediate on-call intervention via runbook procedures.
+
+  ---
+
+## 9. Phase 7: Prometheus Alert Rules & Alertmanager Deployment
+
+To operationalize the alerting thresholds defined in Phase 6, **Prometheus Alertmanager (`v0.27.0`)** was deployed alongside a declarative set of alerting rules in Prometheus.
+
+### 9.1 Architecture & Configuration
+- **Alerting Rules (`config/prometheus/alert_rules.yml`):** Implemented 13 rules organized into three logical groups (`servicedesk_availability_alerts`, `servicedesk_application_alerts`, and `servicedesk_infrastructure_alerts`) covering API/database availability, HTTP `5xx`/`4xx` error rates, `p95` latency, and host CPU, RAM, and disk saturation.
+- **Prometheus Integration (`config/prometheus/prometheus.yml`):** Configured `evaluation_interval: 15s`, loaded `/etc/prometheus/alert_rules.yml` under `rule_files`, and registered Alertmanager at `127.0.0.1:9093`.
+- **Alertmanager Deployment & Routing (`config/alertmanager/alertmanager.yml` & `config/systemd/alertmanager.service`):** Deployed `alertmanager` as a hardened `systemd` unit running under the unprivileged `prometheus` user and bound strictly to `127.0.0.1:9093` (with clustering disabled via `--cluster.listen-address=""`). Configured label-based routing separating `critical` alerts (`group_wait: 10s`, `repeat_interval: 15m`) from `warning` alerts (`group_wait: 30s`, `repeat_interval: 2h`) with `send_resolved: true`.
+
+### 9.2 Verification Evidence
+- Validated rule and configuration syntax cleanly using `promtool check rules`, `promtool check config`, and `amtool check-config`.
+- Verified `systemctl is-active alertmanager prometheus` returned `active` for both services, confirmed Prometheus discovered `http://127.0.0.1:9093/api/v2/alerts` as an active Alertmanager target, and verified all 13 rules loaded via `/api/v1/rules`.
+
+![Phase 7 Alertmanager and Prometheus Rules Verification](images/part2/04-phase7-alertmanager-rules.png)
