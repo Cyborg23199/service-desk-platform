@@ -213,3 +213,27 @@ To operationalize the alerting thresholds defined in Phase 6, **Prometheus Alert
 - Verified `systemctl is-active alertmanager prometheus` returned `active` for both services, confirmed Prometheus discovered `http://127.0.0.1:9093/api/v2/alerts` as an active Alertmanager target, and verified all 13 rules loaded via `/api/v1/rules`.
 
 ![Phase 7 Alertmanager and Prometheus Rules Verification](images/part2/04-phase7-alertmanager-rules.png)
+
+---
+
+## 10. Phase 8: Slack Webhook Integration & End-to-End Alerting Verification
+
+To complete the observability pipeline, Alertmanager was integrated with **Slack Incoming Webhooks** (`#servicedesk-alerts`) using a secret-free Git configuration pattern, followed by controlled fault injection to verify the complete `PENDING -> FIRING -> RESOLVED` alerting lifecycle.
+
+### 10.1 Secret Management & Service Isolation
+- **Ephemeral Runtime Secret Injection:** The Slack webhook URL is stored exclusively on the VM in `/etc/alertmanager/alertmanager.env` (`0600`, owned by `prometheus:prometheus`) and never committed to Git. In `config/systemd/alertmanager.service`, `RuntimeDirectory=alertmanager` (`0700` in `tmpfs` RAM) and `ExecStartPre` with `envsubst` render `/run/alertmanager/alertmanager.yml` at startup from the version-controlled template `config/alertmanager/alertmanager.yml`.
+- **Service Dependency Decoupling:** Updated `config/systemd/servicedesk-api.service` from `Requires=postgresql.service` to `Wants=postgresql.service` so that a PostgreSQL outage degrades the database health probe (`HTTP 503` on `/health`, `servicedesk_db_up = 0`) without terminating the Gunicorn API process.
+
+### 10.2 Controlled Fault Injection (`PostgreSQL` Outage Simulation)
+1. **Failure Injection:** Executed `sudo systemctl stop postgresql` while keeping `servicedesk-api` active.
+2. **Probe & Metric Verification:** `curl -ski https://127.0.0.1/health` immediately returned `HTTP/1.1 503 SERVICE UNAVAILABLE` with `{"database":{"error":"OperationalError","status":"down"},"service":"servicedesk-api","status":"unhealthy"}`.
+3. **Rule Evaluation & Notification:** After exceeding the `for: 1m` evaluation window, Prometheus transitioned `ServiceDeskPostgreSQLDown` to `FIRING` while keeping `ServiceDeskAPIDown` inactive (`0 active`). Alertmanager routed the incident to `#servicedesk-alerts` on Slack with a critical `FIRING` notification, while Grafana reflected `PostgreSQL Health: DOWN` and `API Availability: 78.3%`.
+4. **Recovery & Auto-Resolution:** Executed `sudo systemctl start postgresql`. `/health` recovered to `HTTP/1.1 200 OK` (`"status":"healthy"`), and Alertmanager automatically dispatched the matching `RESOLVED` notification to Slack.
+
+![Phase 8 Slack Firing and Resolved Alerts](images/part2/05-phase8-slack-alerts.png)
+
+![Phase 8 Fault Injection Terminal Verification](images/part2/06-phase8-fault-injection-terminal.png)
+
+![Phase 8 Prometheus Alert Rule Firing State](images/part2/07-phase8-prometheus-firing.png)
+
+![Phase 8 Grafana Outage Visualization](images/part2/08-phase8-grafana-outage.png)
