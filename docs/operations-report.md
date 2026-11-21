@@ -272,3 +272,39 @@ Based on the progressive load test metrics and Grafana telemetry, the performanc
 - **Limiting Resources & Bottlenecks:**
   1. **Application Concurrency (`Gunicorn` workers):** The primary throughput bottleneck is the synchronous worker pool (`--workers 3`, sized for the 2 vCPU VM), which processes at most 3 simultaneous requests in parallel.
   2. **Compute & Memory Headroom:** Host CPU rose from ~10% to ~41% during peak load without breaching the 85% warning threshold, while RAM remained steady at ~74% and PostgreSQL sustained all 11,500 read queries with **0% error rate** and **100% API availability**.
+
+  ---
+
+## 13. Phase 11: Automated PostgreSQL Backup Policy
+
+To protect incident, user, and comment records against data corruption or accidental deletion, an automated backup pipeline was implemented using PostgreSQL's custom-format logical dump utility (`pg_dump -Fc`) scheduled via `systemd` timers.
+
+### 13.1 Backup Policy Specification
+- **Scope (`What`):** Complete logical backup of the `servicedesk` database (schema, sequences, `users`, `incidents`, and `comments` tables) using `scripts/backup_db.sh`.
+- **Schedule (`When`):** Automated daily execution at `02:00:00` local time (`CET`) via `config/systemd/servicedesk-backup.timer` (`OnCalendar=*-*-* 02:00:00`, `Persistent=true` to run missed backups immediately after VM boot).
+- **Storage & Access Control (`Where`):** Stored locally in `/var/backups/servicedesk/` owned by `postgres:postgres` with strict permissions (`0750` on directory, `0640` on dump files) to prevent unauthorized read access.
+- **Retention (`How Many`):** 7-day rolling retention (`RETENTION_DAYS=7`), automatically pruning `.dump` and `.sha256` files older than 7 days.
+- **Integrity Verification (`How Verified`):** Every backup is validated immediately after creation via `pg_restore --list` (confirming non-zero `TABLE DATA` entries) and accompanied by a cryptographic `sha256sum` digest file.
+
+---
+
+## 14. Phase 12: Disaster Recovery & Continuity Verification
+
+A controlled end-to-end disaster recovery drill was executed using `scripts/restore_db.sh` and recorded in `docs/evidence/backup_restore_test.txt`:
+
+1. **Pre-Backup Canary Record:** Created incident `id=27` (`"DR Recovery Verification Incident"`) via `POST /api/incidents`.
+2. **Backup Execution & Checksum Generation:** Executed `sudo ./scripts/backup_db.sh`, generating `servicedesk_20261121T220348Z.dump` (`12 KB`, `verified_tables=3`) alongside its `.sha256` checksum.
+3. **Simulated Catastrophic Data Loss:** Executed `DROP DATABASE servicedesk WITH (FORCE);` in PostgreSQL. Verified that `/health` immediately degraded to `HTTP/1.1 503 SERVICE UNAVAILABLE` (`"database":{"error":"OperationalError","status":"down"}`).
+4. **Automated Restoration (`scripts/restore_db.sh`):** Verified the SHA-256 checksum (`OK`), cleanly stopped `servicedesk-api`, recreated the `servicedesk` database owned by `servicedesk_user`, restored all objects via `pg_restore`, and restarted `servicedesk-api`.
+5. **Post-Recovery Data Verification:** Confirmed `/health` returned `HTTP/1.1 200 OK` (`"status":"healthy"`) and `GET /api/incidents` returned the canary record `id=27` (`"DR Recovery Verification Incident"`) intact.
+
+![Phase 11-13 Backup and Disaster Recovery Drill](images/part2/11-phase11-13-backup-and-restore.png)
+
+---
+
+## 15. Phase 13: RPO & RTO Objectives and Validation
+
+| Continuity Metric | Defined Target (`Objective`) | Achieved Result (`Measured`) | Justification & Operational Analysis |
+| :--- | :--- | :--- | :--- |
+| **RPO (Recovery Point Objective)** | **24 hours** | **≤ 24 hours** (0 data loss in test) | Daily automated backups at `02:00` limit maximum potential data loss to at most 24 hours of transactions; on-demand execution before maintenance reduces RPO to 0. |
+| **RTO (Recovery Time Objective)** | **15 minutes** | **2.62 seconds (`2,621 ms`)** | Automated `scripts/restore_db.sh` completes checksum verification, database recreation, `pg_restore`, and API restart in **2.62 s**—well within the 15-minute operational SLA. |

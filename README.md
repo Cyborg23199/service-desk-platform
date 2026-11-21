@@ -91,9 +91,12 @@ flowchart TD
   - Implemented `scripts/load_test.sh` using ApacheBench (`ab`) across four progressive concurrency tiers (`c = 5, 20, 50, 100`; 11,500 total requests), archived raw results in `docs/evidence/load_test_results.txt`, and correlated traffic spikes with Grafana telemetry.
 - [x] **Phase 10: Performance Analysis & Saturation Point**
   - Identified the system saturation threshold (`c ≈ 20`, ~600 req/s), quantified TCP queueing latency growth (`p50` scaling from 31 ms to 154 ms under saturation), and confirmed zero HTTP errors across all load tiers.
-- [ ] **Phase 11: Automated Database Backups**
-- [ ] **Phase 12: Business Continuity & Controlled Disaster Recovery**
-- [ ] **Phase 13: RPO & RTO Measurement**
+- [x] **Phase 11: Automated Database Backups**
+  - Implemented `scripts/backup_db.sh` (`pg_dump -Fc`, `pg_restore --list` integrity validation, SHA-256 checksums, 7-day retention) automated daily via `servicedesk-backup.timer`.
+- [x] **Phase 12: Business Continuity & Controlled Disaster Recovery**
+  - Implemented `scripts/restore_db.sh` and verified end-to-end recovery after simulating complete database deletion (`DROP DATABASE WITH (FORCE)`), confirming full restoration of canary records.
+- [x] **Phase 13: RPO & RTO Measurement**
+  - Established `RPO = 24 hours` and `RTO = 15 minutes`, measuring an actual automated recovery time of **2.62 seconds (`2,621 ms`)**.
 - [ ] **Phase 14: Incident Simulation & Diagnostic Drills**
 - [ ] **Phase 15: Infrastructure Reboot & Service Auto-Start**
 - [ ] **Phase 16: Operations Runbook & Operational Report**
