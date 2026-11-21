@@ -87,8 +87,10 @@ flowchart TD
   - Deployed `alertmanager` (`v0.27.0`) as a `systemd` service bound to `127.0.0.1:9093`, implemented 13 `Warning`/`Critical` alerting rules (`config/prometheus/alert_rules.yml`), configured severity-based routing (`config/alertmanager/alertmanager.yml`), and verified rule evaluation in Prometheus.
 - [x] **Phase 8: Slack Webhook Integration & End-to-End Alerting Verification**
   - Integrated Alertmanager with Slack Incoming Webhooks (`#servicedesk-alerts`) via `systemd` `RuntimeDirectory` + `envsubst` secret injection, decoupled `servicedesk-api` from `postgresql` (`Wants=`), and verified the full `FIRING -> RESOLVED` alerting lifecycle via controlled PostgreSQL fault injection.
-- [ ] **Phase 9: Load Generation & Testing**
-- [ ] **Phase 10: Performance Analysis & Saturation Point**
+- [x] **Phase 9: Load Generation & Testing**
+  - Implemented `scripts/load_test.sh` using ApacheBench (`ab`) across four progressive concurrency tiers (`c = 5, 20, 50, 100`; 11,500 total requests), archived raw results in `docs/evidence/load_test_results.txt`, and correlated traffic spikes with Grafana telemetry.
+- [x] **Phase 10: Performance Analysis & Saturation Point**
+  - Identified the system saturation threshold (`c ≈ 20`, ~600 req/s), quantified TCP queueing latency growth (`p50` scaling from 31 ms to 154 ms under saturation), and confirmed zero HTTP errors across all load tiers.
 - [ ] **Phase 11: Automated Database Backups**
 - [ ] **Phase 12: Business Continuity & Controlled Disaster Recovery**
 - [ ] **Phase 13: RPO & RTO Measurement**
