@@ -1,0 +1,10 @@
+[Unit]
+Description=PostgreSQL Automated Backup for Service Desk Platform
+After=postgresql.service
+Requires=postgresql.service
+
+[Service]
+Type=oneshot
+User=root
+WorkingDirectory=/home/uo324701/service-desk-platform
+ExecStart=/home/uo324701/service-desk-platform/scripts/backup_db.sh

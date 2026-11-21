@@ -1,0 +1,10 @@
+[Unit]
+Description=Daily PostgreSQL Backup Timer for Service Desk Platform
+
+[Timer]
+OnCalendar=*-*-* 02:00:00
+RandomizedDelaySec=60
+Persistent=true
+
+[Install]
+WantedBy=timers.target
