@@ -237,3 +237,38 @@ To complete the observability pipeline, Alertmanager was integrated with **Slack
 ![Phase 8 Prometheus Alert Rule Firing State](images/part2/07-phase8-prometheus-firing.png)
 
 ![Phase 8 Grafana Outage Visualization](images/part2/08-phase8-grafana-outage.png)
+
+---
+
+## 11. Phase 9: Load Generation
+
+To evaluate system behavior under concurrent traffic, an automated load testing script (`scripts/load_test.sh`) was implemented using **ApacheBench (`ab`)** against the HTTPS reverse proxy endpoint `https://127.0.0.1/api/incidents` (exercising the full `Nginx TLS -> Gunicorn -> PostgreSQL` stack).
+
+Four progressive concurrency levels (`c = 5, 20, 50, 100`) totaling **11,500 HTTP GET requests** were executed with 20-second cooldown intervals to align with Prometheus's 15-second scrape cycle. Raw benchmark outputs were recorded in `docs/evidence/load_test_results.txt`.
+
+### 11.1 Load Test Results Summary
+
+| Scenario | Concurrency (`c`) | Total Requests (`n`) | Throughput (`RPS`) | Mean Latency (Client) | `p50` | `p95` | `p99` | Failed Requests |
+| :--- | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: |
+| **Level 1 (Light)** | 5 | 500 | 120.21 req/s | 41.59 ms | 8 ms | 16 ms | 37 ms | 0 |
+| **Level 2 (Moderate)** | 20 | 2,000 | 594.24 req/s | 33.66 ms | 31 ms | 49 ms | 71 ms | 0 |
+| **Level 3 (Heavy)** | 50 | 4,000 | 587.39 req/s | 85.12 ms | 80 ms | 125 ms | 164 ms | 0 |
+| **Level 4 (Saturation)** | 100 | 5,000 | 614.09 req/s | 162.84 ms | 154 ms | 209 ms | 254 ms | 0 |
+
+### 11.2 Correlation with Prometheus & Grafana Telemetry
+During the benchmark window, Grafana captured the traffic surge on `HTTP Requests / sec` (peaking at ~200 req/s averaged over a 1-minute `rate()` window), zero HTTP 4xx/5xx errors, an increase in `Host CPU Utilization` from a ~10% baseline to ~41%, and stable memory utilization (~74%).
+
+![Phase 9 Grafana Load Test Telemetry](images/part2/09-phase9-grafana-load-test.png)
+![Phase 9 ApacheBench Summary Output](images/part2/10-phase9-ab-benchmark-summary.png)
+
+---
+
+## 12. Phase 10: Performance Analysis
+
+Based on the progressive load test metrics and Grafana telemetry, the performance profile of the Service Desk platform was characterized as follows:
+
+- **Approximate Saturation Point:** Throughput scales sharply between `c = 5` (120.21 req/s) and `c = 20` (594.24 req/s). Beyond `c = 20`, throughput reaches a plateau around **~590–614 req/s** (`c = 50` and `c = 100`), identifying **`c ≈ 20` concurrent connections (~600 req/s)** as the saturation threshold of the single-node deployment.
+- **Latency Evolution & Queueing Effect:** While internal Flask processing latency reported by Prometheus remained virtually flat (~2.5 ms `p50`, ~8.8 ms `p99`), end-to-end client latency grew linearly once concurrency exceeded the saturation point: client `p50` increased nearly 5x from **31 ms (`c = 20`)** to **80 ms (`c = 50`)** and **154 ms (`c = 100`)**. In accordance with Little's Law, excess concurrent requests wait in the TCP accept queue before being picked up by an available worker.
+- **Limiting Resources & Bottlenecks:**
+  1. **Application Concurrency (`Gunicorn` workers):** The primary throughput bottleneck is the synchronous worker pool (`--workers 3`, sized for the 2 vCPU VM), which processes at most 3 simultaneous requests in parallel.
+  2. **Compute & Memory Headroom:** Host CPU rose from ~10% to ~41% during peak load without breaching the 85% warning threshold, while RAM remained steady at ~74% and PostgreSQL sustained all 11,500 read queries with **0% error rate** and **100% API availability**.
