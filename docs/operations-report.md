@@ -117,3 +117,22 @@ Request hooks (`before_request` and `after_request`) capture telemetry for every
 - Verified via `http://127.0.0.1:9090/api/v1/targets` that `prometheus`, `node_exporter`, and `servicedesk_api` all report `"health": "up"`.
 
 ![Phase 3 Metrics and Prometheus Targets Verification](assets/part2/01-phase3-metrics-targets-verification.png)
+
+---
+
+## 6. Phase 4: Active Health Check Endpoint (`/health`)
+
+To verify end-to-end service and database readiness beyond process liveness, an active `/health` endpoint was implemented in `src/health.py` and registered in the Flask application.
+
+### 6.1 Probe Behavior & HTTP Semantics
+- **Active Database Verification:** On every `GET /health` request, the application executes a lightweight `SELECT 1` query against PostgreSQL via SQLAlchemy (`db.session.execute(text("SELECT 1"))`) using the unprivileged `servicedesk_user` connection pool.
+- **Status Codes & JSON Payload:**
+  - When the query succeeds, `/health` returns **HTTP `200 OK`** with `{"status": "healthy", "service": "servicedesk-api", "database": {"status": "up", "latency_ms": <float>}}`.
+  - When PostgreSQL is unreachable or raises a `SQLAlchemyError`, the session is rolled back and `/health` returns **HTTP `503 Service Unavailable`** with `"status": "unhealthy"` and the exception class name.
+- **Prometheus Telemetry Integration:** Each probe updates `servicedesk_db_up` (`Gauge`, `1` = up, `0` = down) and records the query execution time in `servicedesk_db_health_check_duration_seconds` (`Histogram`), exposing database health directly inside `/metrics`.
+
+### 6.2 Verification Evidence
+- Verified direct Gunicorn access (`http://127.0.0.1:8000/health`) and full-stack reverse-proxy access through Nginx TLS (`https://127.0.0.1/health`), both returning `HTTP/1.1 200 OK` with live `SELECT 1` round-trip latency measurements.
+- Confirmed that `servicedesk_db_up` and `servicedesk_db_health_check_duration_seconds` are exported on `http://127.0.0.1:8000/metrics`.
+
+![Phase 4 Health Check Verification](images/part2/02-phase4-health-check-verification.png)
