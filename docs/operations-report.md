@@ -308,3 +308,42 @@ A controlled end-to-end disaster recovery drill was executed using `scripts/rest
 | :--- | :--- | :--- | :--- |
 | **RPO (Recovery Point Objective)** | **24 hours** | **≤ 24 hours** (0 data loss in test) | Daily automated backups at `02:00` limit maximum potential data loss to at most 24 hours of transactions; on-demand execution before maintenance reduces RPO to 0. |
 | **RTO (Recovery Time Objective)** | **15 minutes** | **2.62 seconds (`2,621 ms`)** | Automated `scripts/restore_db.sh` completes checksum verification, database recreation, `pg_restore`, and API restart in **2.62 s**—well within the 15-minute operational SLA. |
+
+---
+
+## 16. Phase 14: Controlled Incident Simulations & End-to-End Lifecycle Validation
+
+To validate operational readiness, four controlled production incident scenarios were injected and resolved following the complete **Failure -> Detection -> Alert -> Diagnosis -> Remediation -> Verification** lifecycle.
+
+### 16.1 Incident Simulation Matrix
+
+| Scenario | Injected Failure & Timestamp | User Impact & Logs | Prometheus Rule & Alert | Diagnosis & Remediation | Total Duration (MTTR incl. Alert Wait) |
+| :--- | :--- | :--- | :--- | :--- | :--- |
+| **1. API Service Down** | `systemctl stop servicedesk-api` at `16:54:24` | Nginx returned `HTTP/1.1 502 Bad Gateway`; `journalctl` logged `SIGTERM` shutdown of Gunicorn workers. | `ServiceDeskAPIDown` (`critical`, `for: 1m`) -> Slack `FIRING` & `RESOLVED` | Verified service state via `journalctl -u servicedesk-api`, executed `systemctl start servicedesk-api`, confirmed `/health` `200 OK` at `16:56:52`. | **2m 28s** |
+| **2. PostgreSQL Database Down** | `systemctl stop postgresql` at `17:05:03` | `/health` returned `HTTP/1.1 503` (`database.status="down"`); `/api/incidents` returned `HTTP 500`; `journalctl` logged `Connection refused` on port `5432`. | `ServiceDeskPostgreSQLDown` (`critical`, `for: 1m`) -> Slack `FIRING` & `RESOLVED` | Verified database connection errors in `journalctl -u servicedesk-api`, executed `systemctl start postgresql`, confirmed `/health` `200 OK` at `17:07:25`. | **2m 22s** |
+| **3. High Host CPU Saturation** | Spawned `nproc` (2) background `yes > /dev/null` workers at `17:16:18` | Host CPU hit **100%** in Grafana; API availability stayed **100%** (no failed requests). | `HighHostCPUUsageCritical` (`> 90%`, `for: 3m`) -> Slack `FIRING` (5:21 PM) & `RESOLVED` (5:23 PM) | Identified top CPU consumers via `ps -eo pid,ppid,cmd,%cpu,%mem --sort=-%cpu`, terminated runaway processes (`killall yes`), verified `uptime` recovery at `17:21:59`. | **5m 41s** |
+| **4. Root Filesystem Near Capacity** | Allocated `5400M` test file (`/var/tmp/disk_fill_test.bin`) at `17:26:49` | Root disk (`/`) jumped from **62%** (`6.6G` free) to **93%** (`1.3G` free) in Grafana and `df -h /`. | `HighRootDiskUsageCritical` (`> 90%`, `for: 5m`) -> Slack `FIRING` (5:32 PM) & `RESOLVED` (5:34 PM) | Located large file via `du -sh`, removed `/var/tmp/disk_fill_test.bin`, confirmed `/` returned to **62%** (`6.6G` free) at `17:33:34`. | **6m 45s** |
+
+> **Operational Observation on Alertmanager `RESOLVED` Annotations:** When an alert resolves, Alertmanager preserves the last evaluated annotation value from the moment the alert transitioned out of `FIRING` (e.g., `98.0%` CPU or `93.0%` disk usage) while marking the notification status `[RESOLVED - CRITICAL]`.
+
+### 16.2 Incident 1 Evidence (`ServiceDeskAPIDown`)
+![Phase 14 Incident 1 Terminal](images/part2/12-phase14-incident1-terminal.png)
+![Phase 14 Incident 1 Prometheus](images/part2/12-phase14-incident1-prometheus.png)
+![Phase 14 Incident 1 Slack](images/part2/12-phase14-incident1-slack.png)
+
+### 16.3 Incident 2 Evidence (`ServiceDeskPostgreSQLDown`)
+![Phase 14 Incident 2 Terminal](images/part2/13-phase14-incident2-terminal.png)
+![Phase 14 Incident 2 Prometheus](images/part2/13-phase14-incident2-prometheus.png)
+![Phase 14 Incident 2 Slack](images/part2/13-phase14-incident2-slack.png)
+
+### 16.4 Incident 3 Evidence (`HighHostCPUUsageCritical`)
+![Phase 14 Incident 3 Grafana](images/part2/14-phase14-incident3-grafana.png)
+![Phase 14 Incident 3 Prometheus](images/part2/14-phase14-incident3-prometheus.png)
+![Phase 14 Incident 3 Terminal](images/part2/14-phase14-incident3-terminal.png)
+![Phase 14 Incident 3 Slack](images/part2/14-phase14-incident3-slack.png)
+
+### 16.5 Incident 4 Evidence (`HighRootDiskUsageCritical`)
+![Phase 14 Incident 4 Grafana](images/part2/15-phase14-incident4-grafana.png)
+![Phase 14 Incident 4 Prometheus](images/part2/15-phase14-incident4-prometheus.png)
+![Phase 14 Incident 4 Terminal](images/part2/15-phase14-incident4-terminal.png)
+![Phase 14 Incident 4 Slack](images/part2/15-phase14-incident4-slack.png)

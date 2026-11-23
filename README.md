@@ -97,7 +97,8 @@ flowchart TD
   - Implemented `scripts/restore_db.sh` and verified end-to-end recovery after simulating complete database deletion (`DROP DATABASE WITH (FORCE)`), confirming full restoration of canary records.
 - [x] **Phase 13: RPO & RTO Measurement**
   - Established `RPO = 24 hours` and `RTO = 15 minutes`, measuring an actual automated recovery time of **2.62 seconds (`2,621 ms`)**.
-- [ ] **Phase 14: Incident Simulation & Diagnostic Drills**
+- [x] **Phase 14: Controlled Incident Simulations**
+  - Simulated and resolved four production incidents (`ServiceDeskAPIDown`, `ServiceDeskPostgreSQLDown`, `HighHostCPUUsageCritical`, and `HighRootDiskUsageCritical`), validating end-to-end detection, Slack alerting (`FIRING` & `RESOLVED`), diagnosis, and recovery.
 - [ ] **Phase 15: Infrastructure Reboot & Service Auto-Start**
 - [ ] **Phase 16: Operations Runbook & Operational Report**
 ---
