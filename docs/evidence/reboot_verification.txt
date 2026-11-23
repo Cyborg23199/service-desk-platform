@@ -1,0 +1,18 @@
+ 18:02:59 up 4 min,  1 user,  load average: 0,17, 0,47, 0,25
+active
+active
+active
+active
+active
+active
+active
+active
+NEXT                        LEFT LAST                        PASSED UNIT                     ACTIVATES
+Tue 2026-11-24 02:00:20 CET   7h Mon 2026-11-23 02:00:34 CET      - servicedesk-backup.timer servicedesk-backup.service
+
+1 timers listed.
+Pass --all to see loaded but inactive timers, too.
+{"database":{"latency_ms":2164.388,"status":"up"},"service":"servicedesk-api","status":"healthy"}
+"health":"up"
+"health":"up"
+"health":"up"

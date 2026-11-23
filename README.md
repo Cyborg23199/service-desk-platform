@@ -99,8 +99,11 @@ flowchart TD
   - Established `RPO = 24 hours` and `RTO = 15 minutes`, measuring an actual automated recovery time of **2.62 seconds (`2,621 ms`)**.
 - [x] **Phase 14: Controlled Incident Simulations**
   - Simulated and resolved four production incidents (`ServiceDeskAPIDown`, `ServiceDeskPostgreSQLDown`, `HighHostCPUUsageCritical`, and `HighRootDiskUsageCritical`), validating end-to-end detection, Slack alerting (`FIRING` & `RESOLVED`), diagnosis, and recovery.
-- [ ] **Phase 15: Infrastructure Reboot & Service Auto-Start**
-- [ ] **Phase 16: Operations Runbook & Operational Report**
+- [x] **Phase 15: Infrastructure Reboot & Service Auto-Start**
+  - Verified automatic startup and full operational readiness of all 8 systemd units (`postgresql`, `servicedesk-api`, `nginx`, `prometheus`, `node_exporter`, `alertmanager`, `grafana-server`, `servicedesk-backup.timer`) following `sudo reboot`.
+- [x] **Phase 16: Operations Runbook**
+  - Published the complete operator guide and incident response playbooks in [Operational Runbook](docs/runbook.md).
+
 ---
 
 ## 📖 Technical Report & Documentation
