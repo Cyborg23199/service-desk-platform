@@ -347,3 +347,23 @@ To validate operational readiness, four controlled production incident scenarios
 ![Phase 14 Incident 4 Prometheus](images/part2/15-phase14-incident4-prometheus.png)
 ![Phase 14 Incident 4 Terminal](images/part2/15-phase14-incident4-terminal.png)
 ![Phase 14 Incident 4 Slack](images/part2/15-phase14-incident4-slack.png)
+
+---
+
+## 17. Phase 15: Full Virtual Machine Reboot Verification
+
+To verify persistent service orchestration across cold starts and host reboots, a full system reboot (`sudo reboot`) was executed. Following boot completion, `docs/evidence/reboot_verification.txt` confirmed automatic startup without manual intervention:
+
+- **Core Application Stack:** `postgresql`, `servicedesk-api`, and `nginx` reported `active` immediately upon boot, with `GET /health` returning `HTTP/1.1 200 OK` (`"status":"healthy"`).
+- **Observability & Alerting Stack:** `prometheus`, `node_exporter`, `alertmanager`, and `grafana-server` reported `active`, with all 3 Prometheus scrape targets healthy (`"health":"up"`).
+- **Backup Automation:** `servicedesk-backup.timer` reported `active (waiting)` with its next scheduled `02:00:00` run intact.
+
+![Phase 15 Full Reboot Verification](images/part2/16-phase15-full-reboot-verification.png)
+
+---
+
+## 18. Phase 16: Operational Runbook & Project Conclusion
+
+A standardized operator card has been published in [`docs/runbook.md`](runbook.md), consolidating service inventory, daily health checklists, safe reload procedures, incident response playbooks mapped directly to every Prometheus alert rule, and validated backup/restore commands.
+
+With Phases 1 through 16 completed and verified, the **Service Desk Platform** meets all functional, security, observability, performance, and business continuity requirements.
