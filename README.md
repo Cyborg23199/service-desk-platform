@@ -7,14 +7,28 @@ The Service Desk Platform allows users to view, create, update, and manage syste
 
 ---
 
-## 🏗 System Architecture (for Part 1)
+## 🏗 System Architecture (Full Production & Observability Stack)
 
 ```mermaid
 flowchart TD
-    Client["Clients / Web Browser / API Consumers"] -->|HTTPS :443| Nginx["Nginx Reverse Proxy\n(TLS Termination)"]
-    Nginx -->|HTTP 127.0.0.1:8000| Gunicorn["Gunicorn WSGI Server"]
-    Gunicorn --> Flask["Flask Application\n(Web UI + REST API)"]
-    Flask -->|PostgreSQL Protocol :5432| DB[("PostgreSQL Database")]
+    Client["Clients & Load Generator\n(Browser / REST API / ab)"] -->|HTTPS :443| Nginx["Nginx Reverse Proxy\n(TLS Termination + /metrics ACL)"]
+    Nginx -->|HTTP 127.0.0.1:8000| Gunicorn["Gunicorn WSGI Server\n(3 Workers)"]
+    Gunicorn --> Flask["Flask Application\n(Web UI + REST API + /health + /metrics)"]
+    Flask -->|PostgreSQL Protocol :5432| DB[("PostgreSQL 18\n(servicedesk DB)")]
+
+    NodeExp["Node Exporter\n(127.0.0.1:9100)"]
+    Prom["Prometheus Server\n(127.0.0.1:9090)"]
+    AlertMgr["Alertmanager\n(127.0.0.1:9093)"]
+    Grafana["Grafana Dashboards\n(127.0.0.1:3000 via SSH Tunnel)"]
+    Slack["Slack Webhook\n(#servicedesk-alerts)"]
+    Backup["Systemd Backup Timer\n(Daily 02:00 pg_dump + SHA-256)"]
+
+    Prom -->|Scrape /metrics 15s| NodeExp
+    Prom -->|Scrape /metrics 15s| Flask
+    Grafana -->|PromQL| Prom
+    Prom -->|Evaluate Rules| AlertMgr
+    AlertMgr -->|FIRING / RESOLVED| Slack
+    Backup -.->|Logical Dump| DB
 ```
 
 ---
@@ -25,8 +39,9 @@ flowchart TD
 - **Web Server & Reverse Proxy:** Nginx
 - **Application Framework:** Python (Flask + Gunicorn)
 - **Database:** PostgreSQL
-- **Service Management:** `systemd`
-- **Observability Stack (Part 2):** Prometheus, Grafana, Node Exporter, Alertmanager
+- **Service Management:** `systemd` (Services & Backup Timers)
+- **Observability & Alerting Stack (Part 2):** Prometheus, Grafana, Node Exporter, Alertmanager, Slack Webhooks
+- **Testing & Backup Tooling:** ApacheBench (`ab`), `pg_dump` / `pg_restore`
 
 ---
 
