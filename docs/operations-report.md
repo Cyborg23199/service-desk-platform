@@ -18,7 +18,7 @@ To maintain low resource overhead on the virtual machine (`2 vCPU`, `1.6 GiB RAM
 ### 2.1 Operational Component & Telemetry Flow Diagram
 ```mermaid
 flowchart TD
-    Client["Clients & Load Generator<br/>(Browser / API / hey)"] -->|HTTPS :443| Nginx["Nginx Reverse Proxy<br/>(TLS Termination)"]
+    Client["Clients & Load Generator<br/>(Browser / API / ab)"] -->|HTTPS :443| Nginx["Nginx Reverse Proxy<br/>(TLS Termination)"]
     Nginx -->|HTTP 127.0.0.1:8000| Flask["Gunicorn & Flask App<br/>(/api, /web, /metrics, /health)"]
     Flask -->|TCP 127.0.0.1:5432| DB[("PostgreSQL 18<br/>(servicedesk DB)")]
 
@@ -32,7 +32,7 @@ flowchart TD
     Prom -->|Scrape /metrics| Flask
     Grafana -->|PromQL Queries| Prom
     Prom -->|Fire Alerts| AlertMgr
-    AlertMgr -->|Notifications| Operator["Operator Receiver<br/>(Webhook / Email)"]
+    AlertMgr -->|Notifications| Slack["Slack Notifications<br/>(#servicedesk-alerts)"]
     Backup -.->|Logical Backup| DB
 ```
 
@@ -362,7 +362,18 @@ To verify persistent service orchestration across cold starts and host reboots, 
 
 ---
 
-## 18. Phase 16: Operational Runbook & Project Conclusion
+## 18. Observability & Operations Security Hardening
+
+To ensure the monitoring, alerting, and backup infrastructure introduces no new attack vectors on the public-facing VM, the following security controls were enforced:
+
+1. **Loopback Isolation of Administrative & Telemetry Services:** `prometheus` (`:9090`), `node_exporter` (`:9100`), `alertmanager` (`:9093`), and `grafana-server` (`:3000`) bind exclusively to `127.0.0.1`. External access is blocked by `UFW` and performed strictly over encrypted SSH tunnels.
+2. **Reverse Proxy Access Control on `/metrics`:** Configured an explicit ACL in `/etc/nginx/sites-available/servicedesk` (`allow 127.0.0.1; allow ::1; deny all;`) restricting `/metrics` to local scraping and returning `403 Forbidden` to external clients.
+3. **Ephemeral Secret Injection for Slack Webhooks:** Stored the Slack Incoming Webhook URL outside Git in `/etc/alertmanager/alertmanager.env` (`0600`, `prometheus:prometheus`) and rendered the active Alertmanager config at runtime into `tmpfs` (`/run/alertmanager/alertmanager.yml`) via `systemd` `RuntimeDirectory` and `envsubst`.
+4. **Dedicated Unprivileged Service Accounts & Backup Permissions:** Isolated telemetry daemons under dedicated `node_exporter` and `prometheus` nologin accounts, and restricted `/var/backups/servicedesk/` to `postgres:postgres` (`0750` directory, `0640` dump files).
+
+---
+
+## 19. Phase 16: Operational Runbook & Project Conclusion
 
 A standardized operator card has been published in [`docs/runbook.md`](runbook.md), consolidating service inventory, daily health checklists, safe reload procedures, incident response playbooks mapped directly to every Prometheus alert rule, and validated backup/restore commands.
 
